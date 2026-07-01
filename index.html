@@ -1,337 +1,630 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agregador • Filtros & Bots</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="manifest" href="manifest.json">
-<style>body { font-family: system-ui, sans-serif; }</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agregador • Filtros & Bots</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');
+        
+        body { font-family: 'Inter', system_ui, sans-serif; }
+        .font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; font-weight: 600; }
+
+        .tab-active { border-bottom: 3px solid #10b981; color: #10b981; font-weight: 600; }
+        .filter-card { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .filter-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); }
+        .section-header { font-size: 1.1rem; font-weight: 600; color: #f3e8ff; margin-bottom: 0.75rem; }
+        .nav-tab { transition: all 0.2s ease; }
+        .nav-tab:hover { color: #10b981; }
+        .condition-row { background-color: #1e2937; border: 1px solid #334155; }
+        .game-card { transition: all 0.2s ease; }
+        .status-live { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .data-source { font-size: 0.65rem; padding: 1px 6px; border-radius: 4px; }
+    </style>
 </head>
-<body class="bg-zinc-950 text-zinc-200">
-<div class="max-w-7xl mx-auto">
-  <div class="flex items-center justify-between border-b border-zinc-800 px-6 py-4">
-    <div class="flex items-center gap-x-3">
-      <div class="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center font-bold text-xl">AB</div>
-      <div>
-        <div class="font-semibold text-2xl tracking-tighter">Agregador</div>
-        <div class="text-[10px] text-emerald-500 -mt-1">ROBOBET PRIMARY • SOKKERPRO (22bet) • ESPN</div>
-      </div>
-    </div>
-    <div class="flex items-center gap-x-2 text-sm">
-      <button onclick="installPWA()" class="px-4 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs">Instalar App</button>
-      <div class="px-3 py-1 bg-emerald-950 text-emerald-400 text-xs rounded-xl border border-emerald-900">v0.3 • local</div>
-    </div>
-  </div>
+<body class="bg-slate-950 text-slate-200">
 
-  <div class="flex border-b border-zinc-800 px-6 text-sm">
-    <div onclick="showTab('visao')" class="tab px-5 py-3 border-b-2 border-emerald-600 cursor-pointer font-medium" id="tab-visao">Visão Geral</div>
-    <div onclick="showTab('filtros')" class="tab px-5 py-3 hover:text-white cursor-pointer text-zinc-400" id="tab-filtros">Meus Filtros</div>
-    <div onclick="showTab('robobet')" class="tab px-5 py-3 hover:text-white cursor-pointer text-zinc-400" id="tab-robobet">Robobet</div>
-    <div onclick="showTab('sokker')" class="tab px-5 py-3 hover:text-white cursor-pointer text-zinc-400" id="tab-sokker">SokkerPRO</div>
-    <div onclick="showTab('espn')" class="tab px-5 py-3 hover:text-white cursor-pointer text-zinc-400" id="tab-espn">ESPN</div>
-    <div onclick="showTab('config')" class="tab px-5 py-3 hover:text-white cursor-pointer text-zinc-400 ml-auto" id="tab-config">Config Fontes</div>
-  </div>
-
-  <!-- VISÃO GERAL -->
-  <div id="visao" class="tab-content p-6">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="bg-zinc-900 rounded-3xl p-5 border border-zinc-800">
-        <div class="text-emerald-400 text-xs mb-1">PRIORIZAÇÃO ATUAL</div>
-        <div class="text-2xl font-semibold">Robobet → SokkerPRO</div>
-        <div class="text-xs text-zinc-500 mt-1">Bots principal • Odds via SokkerPRO (22bet) quando disponível</div>
-      </div>
-      <div class="bg-zinc-900 rounded-3xl p-5 border border-zinc-800">
-        <div class="flex justify-between"><div class="text-xs text-zinc-400">FILTROS ATIVOS</div></div>
-        <div class="text-4xl font-semibold mt-2" id="active-filters">0</div>
-      </div>
-      <div class="bg-zinc-900 rounded-3xl p-5 border border-zinc-800">
-        <div class="text-xs text-zinc-400 mb-2">ÚLTIMO TESTE</div>
-        <div id="last-test" class="font-mono text-sm text-emerald-400">Nenhum ainda</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- FILTROS -->
-  <div id="filtros" class="tab-content p-6 hidden">
-    <div class="flex justify-between items-center mb-4">
-      <div class="font-semibold">Filtros guardados (local)</div>
-      <button onclick="showNewFilterForm()" class="px-5 py-2 text-sm rounded-2xl bg-emerald-600 hover:bg-emerald-500">+ Novo Filtro Híbrido</button>
-    </div>
-
-    <div id="new-filter-form" class="hidden bg-zinc-900 border border-zinc-700 rounded-3xl p-5 mb-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
-        <div><label class="text-xs text-zinc-400">Nome</label><input id="f-name" class="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-4 py-2 text-sm" value="HT Gol + Cantos 4.5"></div>
-        <div><label class="text-xs text-zinc-400">Mercado</label>
-          <select id="f-market" class="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-4 py-2 text-sm">
-            <option>Gol HT</option><option>Cantos HT</option><option>BTTS</option><option>Over 2.5 FT</option><option>Gol FT</option>
-          </select>
+    <!-- Header -->
+    <div class="border-b border-slate-800 bg-slate-900">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-x-3">
+                <div class="w-10 h-10 bg-emerald-500 rounded-2xl flex items-center justify-center">
+                    <i class="fa-solid fa-robot text-white text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-display text-3xl font-semibold tracking-tighter">Agregador</h1>
+                    <p class="text-emerald-400 text-xs -mt-1">Filtros &amp; Bots • v0.6</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-x-4">
+                <div id="update-status" class="hidden items-center gap-x-2 text-xs px-3 py-1.5 bg-slate-800 rounded-3xl border border-slate-700">
+                    <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                    <span id="update-text" class="text-emerald-300">Atualizado agora</span>
+                </div>
+                
+                <button onclick="showConfigModal()" class="flex items-center gap-x-2 px-4 py-2 text-sm bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-3xl transition-colors">
+                    <i class="fa-solid fa-cog"></i>
+                    <span class="hidden md:inline">Config</span>
+                </button>
+            </div>
         </div>
-        <div><label class="text-xs text-zinc-400">Liga / Competição</label><input id="f-league" class="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-4 py-2 text-sm" placeholder="Liga Portugal / UCL"></div>
-        <div><label class="text-xs text-zinc-400">Período</label>
-          <select id="f-period" class="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-4 py-2 text-sm">
-            <option value="HT">HT (Primeiro Tempo)</option><option value="FT">FT (Jogo Completo)</option><option value="LIVE">Live</option>
-          </select>
-        </div>
-        <div><label class="text-xs text-zinc-400">Odd mínima</label><input id="f-minodd" type="number" step="0.01" class="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-4 py-2 text-sm" value="1.80"></div>
-        <div class="md:col-span-2"><label class="text-xs text-zinc-400">Condições</label>
-          <textarea id="f-conditions" class="w-full bg-zinc-950 border border-zinc-700 rounded-3xl px-4 py-3 text-sm h-20" placeholder="HT corners >= 3 AND xG diff > 0.7"></textarea>
-        </div>
-        <div><label class="text-xs text-zinc-400">Fonte primária (odds)</label>
-          <select id="f-primary" class="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-4 py-2 text-sm">
-            <option value="robobet">Robobet (prioridade)</option>
-            <option value="sokkerpro">SokkerPRO (22bet)</option>
-            <option value="espn">ESPN</option>
-            <option value="manual">Manual</option>
-          </select>
-        </div>
-        <div><label class="text-xs text-zinc-400">Fallback</label>
-          <select id="f-fallback" class="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-4 py-2 text-sm">
-            <option value="sokkerpro">SokkerPRO (22bet)</option>
-            <option value="robobet">Robobet</option>
-            <option value="manual">Manual</option>
-            <option value="none">Nenhum</option>
-          </select>
-        </div>
-      </div>
-      <div class="flex gap-3 mt-4">
-        <button onclick="saveNewFilter()" class="flex-1 py-2.5 rounded-2xl bg-emerald-600 text-sm">Guardar Filtro</button>
-        <button onclick="hideNewFilterForm()" class="px-6 py-2.5 rounded-2xl border border-zinc-700 text-sm">Cancelar</button>
-      </div>
     </div>
 
-    <div id="filters-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-  </div>
-
-  <!-- ROBBET -->
-  <div id="robobet" class="tab-content p-6 hidden">
-    <div class="flex justify-between mb-4">
-      <div>
-        <div class="font-semibold">Robobet</div>
-        <div class="text-xs text-zinc-500">Bots e filtros já configurados • Login fazes no site/app real</div>
-      </div>
-      <div class="flex gap-2">
-        <a href="https://www.robobet.app/" target="_blank" class="text-xs px-4 py-2 border border-zinc-700 rounded-2xl">Website →</a>
-        <a href="https://play.google.com/store/apps/details?id=com.robobet.app" target="_blank" class="text-xs px-4 py-2 border border-emerald-700 text-emerald-400 rounded-2xl">App Android →</a>
-      </div>
-    </div>
-    <div class="text-xs mb-3 text-amber-400">⚠ Login com as tuas credenciais fazes diretamente no Robobet (site ou app). Este agregador só serve para gerir e testar os filtros.</div>
-    <div id="robobet-list" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
-    <button onclick="addRobobetBot()" class="mt-4 text-xs px-4 py-2 border border-zinc-700 rounded-2xl">+ Adicionar bot que já tens configurado</button>
-  </div>
-
-  <!-- SOKKERPRO -->
-  <div id="sokker" class="tab-content p-6 hidden">
-    <div class="font-semibold mb-1">SokkerPRO • Odds 22bet + Filtros</div>
-    <div class="text-xs text-zinc-500 mb-4">Fonte preferida para odds dos teus mercados (22bet)</div>
-    <a href="https://sokkerpro.com/" target="_blank" class="inline-block text-xs px-4 py-2 border border-zinc-700 rounded-2xl">Abrir SokkerPRO →</a>
-  </div>
-
-  <!-- ESPN -->
-  <div id="espn" class="tab-content p-6 hidden">
-    <div class="font-semibold mb-3">ESPN Soccer</div>
-    <a href="https://www.espn.com/soccer/" target="_blank" class="inline-block mt-2 text-xs px-4 py-2 border border-zinc-700 rounded-2xl">Abrir ESPN →</a>
-  </div>
-
-  <!-- CONFIG -->
-  <div id="config" class="tab-content p-6 hidden">
-    <div class="max-w-md space-y-6">
-      <div>
-        <div class="font-semibold mb-3">Comportamento de odds (para os teus filtros)</div>
-        <select id="odds-behavior" onchange="saveConfig()" class="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-4 py-2 text-sm">
-          <option value="sokkerpro-first">SokkerPRO (22bet) primeiro → fallback Robobet</option>
-          <option value="robobet-first">Robobet primeiro → fallback SokkerPRO</option>
-          <option value="both">Mostrar ambas quando possível</option>
-        </select>
-        <div class="text-[10px] text-zinc-500 mt-1">SokkerPRO usa odds da 22bet (tua casa). Usa esta opção para definir o comportamento global.</div>
-      </div>
-
-      <div>
-        <div class="font-semibold mb-3">Fontes ativas</div>
-        <div class="space-y-2 text-sm">
-          <div class="flex items-center justify-between bg-zinc-900 px-4 py-2.5 rounded-2xl border border-zinc-800">
-            <div>Robobet</div><input type="checkbox" id="use-robobet" checked onchange="saveConfig()" class="accent-emerald-600">
-          </div>
-          <div class="flex items-center justify-between bg-zinc-900 px-4 py-2.5 rounded-2xl border border-zinc-800">
-            <div>SokkerPRO (22bet)</div><input type="checkbox" id="use-sokker" checked onchange="saveConfig()" class="accent-emerald-600">
-          </div>
-          <div class="flex items-center justify-between bg-zinc-900 px-4 py-2.5 rounded-2xl border border-zinc-800">
-            <div>ESPN</div><input type="checkbox" id="use-espn" checked onchange="saveConfig()" class="accent-emerald-600">
-          </div>
+    <!-- Tabs -->
+    <div class="max-w-7xl mx-auto px-6 pt-6">
+        <div class="flex border-b border-slate-800 overflow-x-auto">
+            <button onclick="switchTab('filtros')" id="tab-filtros" class="nav-tab px-6 py-3 text-sm font-medium border-b-2 border-transparent flex items-center gap-x-2 tab-active">
+                <i class="fa-solid fa-list-check w-4"></i><span>Meus Filtros</span>
+            </button>
+            <button onclick="switchTab('criar')" id="tab-criar" class="nav-tab px-6 py-3 text-sm font-medium border-b-2 border-transparent flex items-center gap-x-2 text-slate-400 hover:text-slate-200">
+                <i class="fa-solid fa-plus w-4"></i><span>Criar Filtro</span>
+            </button>
+            <button onclick="switchTab('importar')" id="tab-importar" class="nav-tab px-6 py-3 text-sm font-medium border-b-2 border-transparent flex items-center gap-x-2 text-slate-400 hover:text-slate-200">
+                <i class="fa-solid fa-download w-4"></i><span>Importar</span>
+            </button>
+            <button onclick="switchTab('jogos')" id="tab-jogos" class="nav-tab px-6 py-3 text-sm font-medium border-b-2 border-transparent flex items-center gap-x-2 text-slate-400 hover:text-slate-200">
+                <i class="fa-solid fa-futbol w-4"></i><span>Jogos ao Vivo</span>
+            </button>
+            <button onclick="switchTab('alertas')" id="tab-alertas" class="nav-tab px-6 py-3 text-sm font-medium border-b-2 border-transparent flex items-center gap-x-2 text-slate-400 hover:text-slate-200">
+                <i class="fa-solid fa-bell w-4"></i><span>Alertas</span>
+            </button>
         </div>
-      </div>
     </div>
-  </div>
-</div>
 
-<script>
-function showTab(tab) {
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-  document.querySelectorAll('.tab').forEach(el => el.classList.remove('border-b-2', 'border-emerald-600', 'text-white'));
-  document.getElementById('tab-' + tab).classList.add('border-b-2', 'border-emerald-600', 'text-white');
-  document.getElementById(tab).classList.remove('hidden');
-}
+    <div class="max-w-7xl mx-auto px-6 py-6">
+        
+        <!-- MEUS FILTROS -->
+        <div id="content-filtros">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-2xl font-semibold">Meus Filtros</h2>
+                    <p class="text-slate-400 text-sm">Gestão central dos teus filtros e bots</p>
+                </div>
+                <button onclick="switchTab('criar')" class="flex items-center gap-x-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-3xl transition-colors">
+                    <i class="fa-solid fa-plus mr-2"></i><span>Novo Filtro</span>
+                </button>
+            </div>
 
-function saveFilters(filters) { localStorage.setItem('filters', JSON.stringify(filters)); }
-function loadFilters() { return JSON.parse(localStorage.getItem('filters') || '[]'); }
+            <div id="filtros-lista" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            
+            <div id="filtros-vazio" class="hidden text-center py-12">
+                <i class="fa-solid fa-filter text-5xl text-slate-700 mb-4"></i>
+                <p class="text-slate-400">Ainda não tens filtros criados.</p>
+                <button onclick="switchTab('criar')" class="mt-4 text-emerald-400 hover:text-emerald-300 text-sm font-medium flex items-center justify-center gap-x-2 mx-auto">
+                    <span>Criar primeiro filtro</span> <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
 
-function saveConfig() {
-  const cfg = {
-    useRobobet: document.getElementById('use-robobet').checked,
-    useSokker: document.getElementById('use-sokker').checked,
-    useEspn: document.getElementById('use-espn').checked,
-    oddsBehavior: document.getElementById('odds-behavior').value
-  };
-  localStorage.setItem('config', JSON.stringify(cfg));
-}
+        <!-- CRIAR FILTRO -->
+        <div id="content-criar" class="hidden">
+            <div class="max-w-3xl">
+                <h2 class="text-2xl font-semibold mb-1">Criar Novo Filtro</h2>
+                <p class="text-slate-400 mb-6">Preenche os dados abaixo.</p>
 
-function loadConfig() {
-  const cfg = JSON.parse(localStorage.getItem('config') || '{"useRobobet":true,"useSokker":true,"useEspn":true,"oddsBehavior":"sokkerpro-first"}');
-  document.getElementById('use-robobet').checked = cfg.useRobobet;
-  document.getElementById('use-sokker').checked = cfg.useSokker;
-  document.getElementById('use-espn').checked = cfg.useEspn;
-  document.getElementById('odds-behavior').value = cfg.oddsBehavior || 'sokkerpro-first';
-}
+                <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 space-y-6">
+                    
+                    <!-- Informações Básicas -->
+                    <div>
+                        <div class="section-header">Informações Básicas</div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1.5">NOME DA ESTRATÉGIA</label>
+                                <input id="filtro-nome" type="text" placeholder="Ex: Grok HT - Mais 1 Gol 1T" class="w-full bg-slate-800 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3 text-sm outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1.5">TIPO DE BOT</label>
+                                <select id="filtro-tipo" class="w-full bg-slate-800 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3 text-sm outline-none">
+                                    <option value="AO VIVO">AO VIVO</option>
+                                    <option value="PRÉ-JOGO">PRÉ-JOGO</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
 
-function renderFilters() {
-  const container = document.getElementById('filters-list');
-  container.innerHTML = '';
-  const filters = loadFilters();
-  document.getElementById('active-filters').innerText = filters.length;
+                    <!-- Mercado e Odds -->
+                    <div>
+                        <div class="section-header">Mercado e Odds</div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-medium text-slate-400 mb-1.5">MERCADO PRINCIPAL</label>
+                                <input id="filtro-mercado" type="text" placeholder="Ex: Mais 1 Gol - Primeiro Tempo" class="w-full bg-slate-800 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3 text-sm outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1.5">CATEGORIA</label>
+                                <select id="filtro-categoria" class="w-full bg-slate-800 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3 text-sm outline-none">
+                                    <option value="Gols">Gols</option>
+                                    <option value="Cantos">Cantos</option>
+                                    <option value="HT">HT / 1º Tempo</option>
+                                    <option value="Late Game">Late Game</option>
+                                    <option value="Outros">Outros</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1.5">ODD MÍNIMA</label>
+                                <input id="filtro-odd-min" type="number" step="0.01" placeholder="1.70" class="w-full bg-slate-800 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3 text-sm outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1.5">ODD MÁXIMA</label>
+                                <input id="filtro-odd-max" type="number" step="0.01" placeholder="2.80" class="w-full bg-slate-800 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3 text-sm outline-none">
+                            </div>
+                        </div>
+                    </div>
 
-  filters.forEach((f, i) => {
-    const div = document.createElement('div');
-    div.className = 'bg-zinc-900 border border-zinc-800 rounded-3xl p-4 text-sm';
-    div.innerHTML = `
-      <div class="flex justify-between items-start">
-        <div class="font-medium">${f.name}</div>
-        <div class="text-[10px] px-2 py-0.5 rounded bg-zinc-800">${f.market}</div>
-      </div>
-      <div class="flex gap-2 mt-2 text-[10px] flex-wrap">
-        ${f.league ? `<span class="px-2 py-px bg-zinc-800 rounded">${f.league}</span>` : ''}
-        <span class="px-2 py-px bg-zinc-800 rounded">${f.period}</span>
-        ${f.minOdd ? `<span class="px-2 py-px bg-emerald-950 text-emerald-400 rounded">Odd ≥ ${f.minOdd}</span>` : ''}
-      </div>
-      <div class="text-xs text-zinc-400 mt-2 line-clamp-2">${f.conditions}</div>
-      <div class="mt-3 flex items-center gap-x-2 text-[10px]">
-        <span class="px-2 py-px bg-emerald-950 text-emerald-400 rounded">Prim: ${f.primary}</span>
-        <span class="px-2 py-px bg-zinc-800 rounded">FB: ${f.fallback}</span>
-      </div>
-      <div class="flex gap-2 mt-4">
-        <button onclick="testFilter(${i})" class="flex-1 text-xs py-1.5 border border-emerald-700 text-emerald-400 rounded-2xl">Testar</button>
-        <button onclick="copyToRobobet(${i})" class="flex-1 text-xs py-1.5 border border-zinc-700 rounded-2xl">→ Robobet</button>
-        <button onclick="copyToSokker(${i})" class="flex-1 text-xs py-1.5 border border-zinc-700 rounded-2xl">→ Sokker</button>
-        <button onclick="deleteFilter(${i})" class="px-3 text-xs py-1.5 border border-red-900/50 text-red-400 rounded-2xl">×</button>
-      </div>
-    `;
-    container.appendChild(div);
-  });
-}
+                    <!-- Contexto da Temporada -->
+                    <div>
+                        <div class="section-header">Contexto da Temporada</div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1.5">JORNADA MÍNIMA</label>
+                                <input id="filtro-jornada-min" type="number" placeholder="1" class="w-full bg-slate-800 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3 text-sm outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1.5">JORNADA MÁXIMA</label>
+                                <input id="filtro-jornada-max" type="number" placeholder="38" class="w-full bg-slate-800 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3 text-sm outline-none">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-medium text-slate-400 mb-1.5">FASE DA TEMPORADA</label>
+                                <select id="filtro-fase" class="w-full bg-slate-800 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3 text-sm outline-none">
+                                    <option value="">Qualquer fase</option>
+                                    <option value="Início">Início da temporada</option>
+                                    <option value="Meio">Meio da temporada</option>
+                                    <option value="Final">Final da temporada</option>
+                                    <option value="Playoffs">Playoffs / Fase decisiva</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
 
-function showNewFilterForm() { document.getElementById('new-filter-form').classList.remove('hidden'); }
-function hideNewFilterForm() { document.getElementById('new-filter-form').classList.add('hidden'); }
+                    <!-- Condições -->
+                    <div>
+                        <div class="section-header flex items-center justify-between">
+                            <span>Condições do Filtro</span>
+                            <button onclick="adicionarCondicao()" class="text-xs flex items-center gap-x-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-2xl text-emerald-400">
+                                <i class="fa-solid fa-plus text-xs"></i> <span class="font-medium">Adicionar condição</span>
+                            </button>
+                        </div>
+                        
+                        <div id="condicoes-container" class="space-y-2 mt-2"></div>
+                        <p class="text-[10px] text-slate-500 mt-2">Todas as condições são ligadas por <strong>AND</strong>.</p>
+                    </div>
 
-function saveNewFilter() {
-  const filters = loadFilters();
-  const newF = {
-    name: document.getElementById('f-name').value || 'Filtro sem nome',
-    market: document.getElementById('f-market').value,
-    league: document.getElementById('f-league').value,
-    period: document.getElementById('f-period').value,
-    minOdd: document.getElementById('f-minodd').value,
-    conditions: document.getElementById('f-conditions').value,
-    primary: document.getElementById('f-primary').value,
-    fallback: document.getElementById('f-fallback').value,
-    created: new Date().toISOString()
-  };
-  filters.unshift(newF);
-  saveFilters(filters);
-  hideNewFilterForm();
-  renderFilters();
-  document.getElementById('f-name').value = '';
-  document.getElementById('f-conditions').value = '';
-  document.getElementById('f-league').value = '';
-}
+                    <div class="flex gap-x-3 pt-4 border-t border-slate-700">
+                        <button onclick="guardarFiltro()" class="flex-1 bg-emerald-500 hover:bg-emerald-600 transition-colors text-white font-semibold py-3.5 rounded-3xl text-sm flex items-center justify-center gap-x-2">
+                            <i class="fa-solid fa-save"></i> <span>GUARDAR FILTRO</span>
+                        </button>
+                        <button onclick="limparFormulario()" class="px-6 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-colors text-sm font-medium rounded-3xl">Limpar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-function deleteFilter(i) {
-  const filters = loadFilters();
-  filters.splice(i,1);
-  saveFilters(filters);
-  renderFilters();
-}
+        <!-- IMPORTAR -->
+        <div id="content-importar" class="hidden">
+            <div class="max-w-2xl">
+                <h2 class="text-2xl font-semibold mb-2">Importar Filtros</h2>
+                <p class="text-slate-400 mb-6">Cola o JSON dos templates abaixo.</p>
+                
+                <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6">
+                    <textarea id="import-text" rows="8" placeholder="Cole aqui o JSON do template..." class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-sm font-mono"></textarea>
+                    <button onclick="importarFiltro()" class="mt-4 w-full py-3 bg-emerald-500 hover:bg-emerald-600 rounded-3xl text-sm font-semibold flex items-center justify-center gap-x-2">
+                        <i class="fa-solid fa-file-import"></i> <span>IMPORTAR FILTRO</span>
+                    </button>
+                </div>
+            </div>
+        </div>
 
-function testFilter(i) {
-  const f = loadFilters()[i];
-  const cfg = JSON.parse(localStorage.getItem('config') || '{}');
-  const behavior = cfg.oddsBehavior || 'sokkerpro-first';
-  let result = `Teste: ${f.name}\n\n`;
+        <!-- JOGOS AO VIVO -->
+        <div id="content-jogos" class="hidden">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-2xl font-semibold">Jogos ao Vivo</h2>
+                    <p class="text-slate-400 text-sm">Atualização adaptativa • football-data.org + fallback</p>
+                </div>
+                <button onclick="atualizarJogosAoVivo(true)" class="flex items-center gap-x-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-3xl text-sm">
+                    <i class="fa-solid fa-sync-alt"></i> <span>Atualizar agora</span>
+                </button>
+            </div>
 
-  if (behavior === 'robobet-first') {
-    result += `Prioridade: Robobet → SokkerPRO\n\n✓ Robobet OK\nOdd simulada: 1.85\nCondições: OK\n\n→ SINAL VÁLIDO`;
-  } else if (behavior === 'sokkerpro-first') {
-    result += `Prioridade: SokkerPRO (22bet) → Robobet\n\n✓ SokkerPRO (22bet) OK\nOdd simulada: 1.87\nCondições: OK\n\n→ SINAL VÁLIDO`;
-  } else {
-    result += `Mostrar ambas:\n• SokkerPRO (22bet): 1.87 OK\n• Robobet: 1.85 OK\n\n→ SINAL VÁLIDO`;
-  }
+            <div class="mb-4 flex items-center gap-x-2 text-xs">
+                <div class="px-3 py-1 bg-slate-800 border border-slate-700 rounded-3xl flex items-center gap-x-2">
+                    <span class="text-emerald-400">Fonte atual:</span> 
+                    <span id="fonte-atual" class="font-medium">A carregar...</span>
+                </div>
+                <div onclick="mostrarInfoFontes()" class="cursor-pointer px-3 py-1 bg-slate-800 border border-slate-700 rounded-3xl flex items-center gap-x-1 text-slate-400 hover:text-slate-200">
+                    <i class="fa-solid fa-info-circle text-xs"></i> <span class="text-[10px]">Como funciona</span>
+                </div>
+            </div>
 
-  document.getElementById('last-test').innerText = `${f.name} → ${behavior}`;
-  alert(result);
-}
+            <div id="jogos-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            <div id="jogos-vazio" class="hidden text-center py-8 text-slate-400">
+                <i class="fa-solid fa-futbol text-4xl mb-3 opacity-40"></i>
+                <p>Nenhum jogo ao vivo encontrado.</p>
+            </div>
+        </div>
 
-function copyToRobobet(i) {
-  const f = loadFilters()[i];
-  const text = `ROBOBET FILTER\nNome: ${f.name}\nMercado: ${f.market} | ${f.period}\nLiga: ${f.league || 'Qualquer'}\nOdd mínima: ${f.minOdd}\nCondições: ${f.conditions}\nFonte primária: ${f.primary} (fallback: ${f.fallback})`;
-  navigator.clipboard.writeText(text).then(() => alert('Copiado! Cola no Robobet'));
-}
+        <!-- ALERTAS -->
+        <div id="content-alertas" class="hidden">
+            <div class="max-w-2xl">
+                <h2 class="text-2xl font-semibold mb-2">Alertas (Fase 2)</h2>
+                <p class="text-slate-400">Esta funcionalidade será ativada quando ligarmos os filtros ao Telegram via ferramenta gratuita.</p>
+            </div>
+        </div>
+    </div>
 
-function copyToSokker(i) {
-  const f = loadFilters()[i];
-  const text = `SOKKERPRO BOT\n${f.name}\nMercado: ${f.market} (${f.period})\nLiga: ${f.league || '-'}\nOdd min: ${f.minOdd}\n${f.conditions}\nPrimary: ${f.primary}`;
-  navigator.clipboard.writeText(text).then(() => alert('Copiado! Cola no SokkerPRO'));
-}
+    <script>
+        let filtros = [];
+        let jogosAoVivo = [];
+        let updateInterval = null;
+        let lastUpdateTime = null;
+        let isPageVisible = true;
 
-function loadRobobet() {
-  const list = JSON.parse(localStorage.getItem('robobetBots') || '[]');
-  const c = document.getElementById('robobet-list');
-  c.innerHTML = '';
-  list.forEach((b) => {
-    const d = document.createElement('div');
-    d.className = 'bg-zinc-900 border border-zinc-800 rounded-2xl p-3 text-xs';
-    d.innerHTML = `<div class="font-medium">${b.name}</div><div class="text-zinc-400">${b.notes || ''}</div>`;
-    c.appendChild(d);
-  });
-}
-function addRobobetBot() {
-  const name = prompt('Nome do bot que já tens no Robobet:');
-  if (!name) return;
-  const notes = prompt('Notas / filtro usado (opcional):') || '';
-  const bots = JSON.parse(localStorage.getItem('robobetBots') || '[]');
-  bots.push({name, notes});
-  localStorage.setItem('robobetBots', JSON.stringify(bots));
-  loadRobobet();
-}
+        function init() {
+            carregarFiltros();
+            renderFiltros();
+            iniciarDeteccaoVisibilidade();
+            iniciarAtualizacaoAdaptativa();
+            switchTab('filtros');
+            
+            setTimeout(() => {
+                if (!document.getElementById('content-jogos').classList.contains('hidden')) {
+                    atualizarJogosAoVivo(false);
+                }
+            }, 600);
+        }
 
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => { deferredPrompt = e; });
-function installPWA() {
-  if (deferredPrompt) deferredPrompt.prompt();
-  else alert('No telemóvel: Menu → Instalar app');
-}
+        function iniciarDeteccaoVisibilidade() {
+            document.addEventListener('visibilitychange', () => {
+                isPageVisible = document.visibilityState === 'visible';
+                ajustarIntervaloAtualizacao(isPageVisible ? 45000 : 120000);
+            });
+        }
 
-function init() {
-  if (!localStorage.getItem('filters')) {
-    saveFilters([
-      {name: "HT Gol + Cantos 4.5", market: "Gol HT", league: "Liga Portugal", period: "HT", minOdd: "1.80", conditions: "HT corners >= 3 AND xG diff > 0.7", primary: "robobet", fallback: "sokkerpro"},
-      {name: "Over 2.5 FT", market: "Over 2.5 FT", league: "Qualquer", period: "FT", minOdd: "1.65", conditions: "Shots on target diff > 2", primary: "sokkerpro", fallback: "robobet"}
-    ]);
-  }
-  renderFilters();
-  loadRobobet();
-  loadConfig();
-  showTab('visao');
-  if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
-}
-init();
-</script>
+        function ajustarIntervaloAtualizacao(novoIntervalo) {
+            if (updateInterval) clearInterval(updateInterval);
+            updateInterval = setInterval(() => {
+                if (!document.getElementById('content-jogos').classList.contains('hidden') && isPageVisible) {
+                    atualizarJogosAoVivo(false);
+                }
+            }, novoIntervalo);
+        }
+
+        function iniciarAtualizacaoAdaptativa() {
+            updateInterval = setInterval(() => {
+                if (!document.getElementById('content-jogos').classList.contains('hidden') && isPageVisible) {
+                    atualizarJogosAoVivo(false);
+                }
+            }, 60000);
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('[id^="content-"]').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.remove('tab-active', 'text-emerald-400'));
+            
+            document.getElementById('content-' + tab).classList.remove('hidden');
+            const tabEl = document.getElementById('tab-' + tab);
+            tabEl.classList.add('tab-active', 'text-emerald-400');
+            
+            if (tab === 'filtros') renderFiltros();
+            if (tab === 'jogos') atualizarJogosAoVivo(false);
+        }
+
+        function carregarFiltros() {
+            const saved = localStorage.getItem('agregador_filtros');
+            if (saved) filtros = JSON.parse(saved);
+        }
+
+        function guardarFiltros() {
+            localStorage.setItem('agregador_filtros', JSON.stringify(filtros));
+        }
+
+        function renderFiltros() {
+            const container = document.getElementById('filtros-lista');
+            const vazio = document.getElementById('filtros-vazio');
+            container.innerHTML = '';
+            
+            if (filtros.length === 0) {
+                vazio.classList.remove('hidden');
+                return;
+            }
+            vazio.classList.add('hidden');
+            
+            filtros.forEach((filtro, index) => {
+                const card = document.createElement('div');
+                card.className = `filter-card bg-slate-900 border border-slate-700 rounded-3xl p-5`;
+                
+                let html = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="font-semibold text-lg">${filtro.nome}</div>
+                            <div class="flex items-center gap-x-2 mt-1">
+                                <span class="px-2.5 py-0.5 text-xs rounded-2xl ${filtro.tipo === 'AO VIVO' ? 'bg-orange-900 text-orange-300' : 'bg-blue-900 text-blue-300'}">${filtro.tipo}</span>
+                                <span class="text-xs text-slate-400">${filtro.categoria || ''}</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-x-1">
+                            <button onclick="eliminarFiltro(${index})" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-400"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-sm text-slate-300">${filtro.mercado}</div>
+                    
+                    <div class="mt-4 pt-4 border-t border-slate-700 flex gap-x-2">
+                        <button onclick="exportarParaRobobet(${index})" class="flex-1 text-xs py-2 bg-slate-800 hover:bg-slate-700 rounded-2xl">Copiar RoboBet</button>
+                        <button onclick="exportarComoJSON(${index})" class="flex-1 text-xs py-2 bg-slate-800 hover:bg-slate-700 rounded-2xl">Exportar JSON</button>
+                    </div>
+                `;
+                card.innerHTML = html;
+                container.appendChild(card);
+            });
+        }
+
+        function guardarFiltro() {
+            const nome = document.getElementById('filtro-nome').value.trim();
+            if (!nome) { alert('Dá um nome ao filtro.'); return; }
+            
+            const novoFiltro = {
+                id: Date.now(),
+                nome: nome,
+                tipo: document.getElementById('filtro-tipo').value,
+                mercado: document.getElementById('filtro-mercado').value.trim(),
+                categoria: document.getElementById('filtro-categoria').value,
+                oddMin: document.getElementById('filtro-odd-min').value || null,
+                oddMax: document.getElementById('filtro-odd-max').value || null,
+                jornadaMin: document.getElementById('filtro-jornada-min').value || null,
+                jornadaMax: document.getElementById('filtro-jornada-max').value || null,
+                fase: document.getElementById('filtro-fase').value || null,
+                condicoes: obterCondicoesDoFormulario(),
+                criadoEm: new Date().toISOString()
+            };
+            
+            filtros.push(novoFiltro);
+            guardarFiltros();
+            renderFiltros();
+            limparFormulario();
+            switchTab('filtros');
+            mostrarNotificacao('Filtro guardado com sucesso!');
+        }
+
+        function obterCondicoesDoFormulario() {
+            const condicoes = [];
+            document.querySelectorAll('#condicoes-container .condition-row').forEach(row => {
+                condicoes.push({
+                    tipo: row.querySelector('.cond-tipo').value,
+                    lado: row.querySelector('.cond-lado').value,
+                    metrica: row.querySelector('.cond-metrica').value,
+                    periodo: row.querySelector('.cond-periodo').value,
+                    operador: row.querySelector('.cond-operador').value,
+                    valor: row.querySelector('.cond-valor').value
+                });
+            });
+            return condicoes;
+        }
+
+        function adicionarCondicao() {
+            const container = document.getElementById('condicoes-container');
+            const div = document.createElement('div');
+            div.className = `condition-row rounded-2xl p-3 flex flex-wrap gap-2 items-end`;
+            
+            div.innerHTML = `
+                <div class="flex-1 min-w-[100px]">
+                    <select class="cond-tipo w-full bg-slate-700 border border-slate-600 rounded-xl px-3 py-2 text-xs">
+                        <option value="AO VIVO">AO VIVO</option>
+                        <option value="PRÉ-JOGO">PRÉ-JOGO</option>
+                        <option value="QUALQUER">QUALQUER</option>
+                    </select>
+                </div>
+                <div class="flex-1 min-w-[90px]">
+                    <select class="cond-lado w-full bg-slate-700 border border-slate-600 rounded-xl px-3 py-2 text-xs">
+                        <option value="FAVORITO">FAVORITO</option>
+                        <option value="AMBOS">AMBOS</option>
+                        <option value="UNDERDOG">UNDERDOG</option>
+                    </select>
+                </div>
+                <div class="flex-1 min-w-[160px]">
+                    <select class="cond-metrica w-full bg-slate-700 border border-slate-600 rounded-xl px-3 py-2 text-xs">
+                        <option value="">Métrica</option>
+                        <option value="CG (Chutes + Escanteios)">CG (Chutes + Escanteios)</option>
+                        <option value="Ataques Perigosos">Ataques Perigosos</option>
+                        <option value="Ataques Perigosos por Minuto">Ataques Perigosos por Minuto</option>
+                        <option value="Chutes Totais">Chutes Totais</option>
+                        <option value="Escanteios Totais">Escanteios Totais</option>
+                        <option value="Diferença de Ataques Perigosos">Diferença de Ataques Perigosos</option>
+                        <option value="Diferença de Escanteios">Diferença de Escanteios</option>
+                        <option value="Events Goals">Events Goals</option>
+                        <option value="Posse de Bola (%)">Posse de Bola (%)</option>
+                        <option value="CV Gols Marcados">CV Gols Marcados</option>
+                        <option value="Cartões Vermelhos">Cartões Vermelhos</option>
+                        <option value="Superioridade">Superioridade</option>
+                    </select>
+                </div>
+                <div class="w-20"><input type="text" class="cond-periodo w-full bg-slate-700 border border-slate-600 rounded-xl px-3 py-2 text-xs" placeholder="15min / FT"></div>
+                <div class="w-16">
+                    <select class="cond-operador w-full bg-slate-700 border border-slate-600 rounded-xl px-3 py-2 text-xs">
+                        <option value=">=">>=</option><option value="<="><=</option><option value="=">=</option>
+                    </select>
+                </div>
+                <div class="w-20"><input type="text" class="cond-valor w-full bg-slate-700 border border-slate-600 rounded-xl px-3 py-2 text-xs" placeholder="Valor"></div>
+                <button onclick="this.parentElement.remove()" class="w-9 h-9 flex items-center justify-center text-red-400 hover:bg-red-900/30 rounded-xl"><i class="fa-solid fa-times"></i></button>
+            `;
+            container.appendChild(div);
+        }
+
+        function limparFormulario() {
+            document.getElementById('filtro-nome').value = '';
+            document.getElementById('filtro-mercado').value = '';
+            document.getElementById('condicoes-container').innerHTML = '';
+        }
+
+        function eliminarFiltro(index) {
+            if (!confirm('Eliminar este filtro?')) return;
+            filtros.splice(index, 1);
+            guardarFiltros();
+            renderFiltros();
+        }
+
+        function exportarParaRobobet(index) {
+            const f = filtros[index];
+            let texto = `=== NOME ===\n${f.nome}\n\n=== TIPO ===\n${f.tipo}\n\n=== MERCADO ===\n${f.mercado}\n\n`;
+            if (f.condicoes && f.condicoes.length > 0) {
+                texto += `=== CONDIÇÕES ===\n`;
+                f.condicoes.forEach((c,i) => texto += `${i+1}. ${c.tipo} | ${c.lado} | ${c.metrica} | ${c.periodo} | ${c.operador} ${c.valor}\n`);
+            }
+            navigator.clipboard.writeText(texto).then(() => mostrarNotificacao('Copiado para RoboBet!'));
+        }
+
+        function exportarComoJSON(index) {
+            const json = JSON.stringify(filtros[index], null, 2);
+            navigator.clipboard.writeText(json).then(() => mostrarNotificacao('JSON copiado!'));
+        }
+
+        async function atualizarJogosAoVivo(forcar = false) {
+            const container = document.getElementById('jogos-container');
+            const fonteEl = document.getElementById('fonte-atual');
+            
+            container.innerHTML = `<div class="col-span-full flex justify-center py-8 text-emerald-400"><i class="fa-solid fa-sync fa-spin mr-2"></i> A atualizar...</div>`;
+            
+            let dados = [];
+            let fonte = 'Simulado';
+            const apiKey = localStorage.getItem('football_data_api_key');
+            
+            if (apiKey) {
+                try {
+                    const res = await fetch('https://api.football-data.org/v4/matches?status=LIVE', { headers: { 'X-Auth-Token': apiKey } });
+                    if (res.ok) {
+                        const json = await res.json();
+                        dados = processarDadosFootballData(json);
+                        fonte = 'football-data.org';
+                    }
+                } catch(e) { console.warn('football-data.org falhou'); }
+            }
+            
+            if (dados.length === 0) {
+                dados = await obterJogosSimulados();
+                fonte = apiKey ? 'football-data.org (fallback)' : 'Simulado';
+            }
+            
+            jogosAoVivo = dados;
+            renderJogosAoVivo();
+            if (fonteEl) fonteEl.textContent = fonte;
+            lastUpdateTime = new Date();
+            atualizarStatusAtualizacao();
+        }
+
+        function processarDadosFootballData(json) {
+            if (!json?.matches) return [];
+            return json.matches.map(m => ({
+                id: m.id,
+                casa: m.homeTeam?.name || 'Casa',
+                fora: m.awayTeam?.name || 'Fora',
+                placar: `${m.score?.fullTime?.home ?? '-'} - ${m.score?.fullTime?.away ?? '-'}`,
+                minuto: m.minute ? m.minute + "'" : '',
+                competicao: m.competition?.name || '',
+                fonte: 'football-data.org',
+                status: 'live'
+            }));
+        }
+
+        async function obterJogosSimulados() {
+            return [
+                {id:1, casa:"Benfica", fora:"Porto", placar:"1-0", minuto:"67'", competicao:"Liga Portugal", fonte:"Simulado", status:"live"},
+                {id:2, casa:"Sporting", fora:"Braga", placar:"2-1", minuto:"82'", competicao:"Liga Portugal", fonte:"Simulado", status:"live"}
+            ];
+        }
+
+        function renderJogosAoVivo() {
+            const container = document.getElementById('jogos-container');
+            container.innerHTML = '';
+            if (jogosAoVivo.length === 0) { document.getElementById('jogos-vazio').classList.remove('hidden'); return; }
+            document.getElementById('jogos-vazio').classList.add('hidden');
+            
+            jogosAoVivo.forEach(j => {
+                const card = document.createElement('div');
+                card.className = `game-card bg-slate-900 border border-slate-700 rounded-3xl p-4`;
+                card.innerHTML = `
+                    <div class="flex justify-between">
+                        <div>
+                            <div class="font-semibold">${j.casa} vs ${j.fora}</div>
+                            <div class="text-emerald-400 font-mono text-lg">${j.placar} <span class="text-xs">${j.minuto}</span></div>
+                        </div>
+                        <div class="text-right">
+                            <span class="data-source bg-emerald-900 text-emerald-300">${j.fonte}</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function atualizarStatusAtualizacao() {
+            const statusEl = document.getElementById('update-status');
+            if (!lastUpdateTime) return;
+            statusEl.style.display = 'flex';
+            document.getElementById('update-text').textContent = 'Atualizado agora';
+        }
+
+        function mostrarInfoFontes() {
+            alert('Fontes:\n1. football-data.org (com API Key)\n2. Fallback automático para dados simulados\n\nVê em Configurações para colocar a tua API Key gratuita.');
+        }
+
+        function importarFiltro() {
+            const texto = document.getElementById('import-text').value.trim();
+            if (!texto) return;
+            try {
+                const obj = JSON.parse(texto);
+                if (obj.nome) {
+                    filtros.push(obj);
+                    guardarFiltros();
+                    renderFiltros();
+                    document.getElementById('import-text').value = '';
+                    switchTab('filtros');
+                    mostrarNotificacao('Filtro importado!');
+                }
+            } catch(e) {
+                alert('JSON inválido. Cola apenas o JSON do template.');
+            }
+        }
+
+        function showConfigModal() {
+            const apiKey = localStorage.getItem('football_data_api_key') || '';
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black/70 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-md mx-4 p-6">
+                    <h3 class="text-xl font-semibold mb-4">Configurações</h3>
+                    <div>
+                        <label class="block text-sm mb-2">API Key football-data.org (gratuita)</label>
+                        <input id="api-key-input" type="text" value="${apiKey}" class="w-full bg-slate-800 border border-slate-700 rounded-2xl px-4 py-3 text-sm font-mono" placeholder="Cole aqui a tua chave">
+                        <p class="text-xs text-slate-500 mt-1">Obtém em: football-data.org/client/register</p>
+                    </div>
+                    <div class="flex gap-x-3 mt-5">
+                        <button onclick="guardarApiKey(this)" class="flex-1 bg-emerald-500 hover:bg-emerald-600 py-3 rounded-3xl text-sm font-semibold">Guardar</button>
+                        <button onclick="this.closest('.fixed').remove()" class="px-6 py-3 bg-slate-800 rounded-3xl text-sm border border-slate-700">Fechar</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function guardarApiKey(btn) {
+            const key = document.getElementById('api-key-input').value.trim();
+            if (key) localStorage.setItem('football_data_api_key', key);
+            else localStorage.removeItem('football_data_api_key');
+            btn.closest('.fixed').remove();
+            mostrarNotificacao('Configuração guardada!');
+        }
+
+        function mostrarNotificacao(msg) {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-6 right-6 bg-emerald-600 px-5 py-3 rounded-3xl flex items-center gap-x-3 text-sm`;
+            toast.innerHTML = `<i class="fa-solid fa-check-circle"></i> <span>${msg}</span>`;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.style.transition = 'all .3s'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2500);
+        }
+
+        window.onload = init;
+    </script>
 </body>
 </html>
