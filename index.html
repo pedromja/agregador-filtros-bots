@@ -27,7 +27,7 @@
                 </div>
                 <div>
                     <h1 class="font-display text-3xl font-semibold tracking-tighter">Agregador</h1>
-                    <p class="text-emerald-400 text-xs -mt-1">Filtros &amp; Bots • v0.8</p>
+                    <p class="text-emerald-400 text-xs -mt-1">Filtros &amp; Bots • v0.9</p>
                 </div>
             </div>
             <button onclick="showConfigModal()" class="flex items-center gap-x-2 px-4 py-2 text-sm bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-3xl">
@@ -51,6 +51,9 @@
             <button onclick="switchTab('jogos')" id="tab-jogos" class="nav-tab px-6 py-3 text-sm font-medium border-b-2 border-transparent flex items-center gap-x-2 text-slate-400">
                 <i class="fa-solid fa-futbol w-4"></i><span>Jogos ao Vivo</span>
             </button>
+            <button onclick="switchTab('alertas')" id="tab-alertas" class="nav-tab px-6 py-3 text-sm font-medium border-b-2 border-transparent flex items-center gap-x-2 text-slate-400">
+                <i class="fa-solid fa-bell w-4"></i><span>Alertas</span>
+            </button>
         </div>
     </div>
 
@@ -72,109 +75,15 @@
                     </button>
                 </div>
             </div>
-
             <div id="filtros-lista" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
         </div>
 
         <!-- CRIAR FILTRO -->
         <div id="content-criar" class="hidden">
             <div class="max-w-3xl">
-                <h2 class="text-2xl font-semibold mb-1">Criar Novo Filtro</h2>
-                <p class="text-slate-400 mb-6">Preenche os dados do filtro.</p>
-
-                <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 space-y-6">
-                    
-                    <!-- Informações Básicas -->
-                    <div>
-                        <div class="section-header">Informações Básicas</div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-medium text-slate-400 mb-1.5">NOME DA ESTRATÉGIA</label>
-                                <input id="filtro-nome" type="text" placeholder="Ex: Grok HT - Mais 1 Gol 1T" class="w-full bg-slate-800 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3 text-sm outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-400 mb-1.5">TIPO DE BOT</label>
-                                <select id="filtro-tipo" class="w-full bg-slate-800 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3 text-sm outline-none">
-                                    <option value="AO VIVO">AO VIVO</option>
-                                    <option value="PRÉ-JOGO">PRÉ-JOGO</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Mercado e Odds -->
-                    <div>
-                        <div class="section-header">Mercado e Odds</div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="md:col-span-2">
-                                <label class="block text-xs font-medium text-slate-400 mb-1.5">MERCADO PRINCIPAL</label>
-                                <input id="filtro-mercado" type="text" placeholder="Ex: Mais 1 Gol - Primeiro Tempo" class="w-full bg-slate-800 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3 text-sm outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-400 mb-1.5">CATEGORIA</label>
-                                <select id="filtro-categoria" class="w-full bg-slate-800 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3 text-sm outline-none">
-                                    <option value="Gols">Gols</option>
-                                    <option value="Cantos">Cantos</option>
-                                    <option value="HT">HT / 1º Tempo</option>
-                                    <option value="Late Game">Late Game</option>
-                                    <option value="Outros">Outros</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-400 mb-1.5">ODD MÍNIMA</label>
-                                <input id="filtro-odd-min" type="number" step="0.01" placeholder="1.70" class="w-full bg-slate-800 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3 text-sm outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-400 mb-1.5">ODD MÁXIMA</label>
-                                <input id="filtro-odd-max" type="number" step="0.01" placeholder="2.80" class="w-full bg-slate-800 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3 text-sm outline-none">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Contexto da Temporada (Atualizado) -->
-                    <div>
-                        <div class="section-header">Contexto da Temporada</div>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <!-- Jornadas -->
-                            <div>
-                                <label class="block text-xs font-medium text-slate-400 mb-1.5">JORNADA MÍNIMA</label>
-                                <input id="filtro-jornada-min" type="number" placeholder="1" class="w-full bg-slate-800 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3 text-sm outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-400 mb-1.5">JORNADA MÁXIMA</label>
-                                <input id="filtro-jornada-max" type="number" placeholder="38" class="w-full bg-slate-800 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3 text-sm outline-none">
-                            </div>
-
-                            <!-- Novas Percentagens -->
-                            <div>
-                                <label class="block text-xs font-medium text-slate-400 mb-1.5">% MÍNIMO TEMPORADA</label>
-                                <input id="filtro-percentagem-min" type="number" placeholder="20" class="w-full bg-slate-800 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3 text-sm outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-400 mb-1.5">% MÁXIMO TEMPORADA</label>
-                                <input id="filtro-percentagem-max" type="number" placeholder="80" class="w-full bg-slate-800 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3 text-sm outline-none">
-                            </div>
-                        </div>
-                        <p class="text-[10px] text-slate-500 mt-2">Usa % para filtrar por progresso da temporada (ex: 20% a 80%).</p>
-                    </div>
-
-                    <!-- Condições -->
-                    <div>
-                        <div class="section-header flex items-center justify-between">
-                            <span>Condições do Filtro</span>
-                            <button onclick="adicionarCondicao()" class="text-xs flex items-center gap-x-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-2xl text-emerald-400">
-                                <i class="fa-solid fa-plus text-xs"></i> <span class="font-medium">Adicionar condição</span>
-                            </button>
-                        </div>
-                        <div id="condicoes-container" class="space-y-2 mt-2"></div>
-                    </div>
-
-                    <div class="flex gap-x-3 pt-4 border-t border-slate-700">
-                        <button onclick="guardarFiltro()" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3.5 rounded-3xl text-sm flex items-center justify-center gap-x-2">
-                            <i class="fa-solid fa-save"></i> <span>GUARDAR FILTRO</span>
-                        </button>
-                        <button onclick="limparFormulario()" class="px-6 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-colors text-sm font-medium rounded-3xl">Limpar</button>
-                    </div>
+                <h2 class="text-2xl font-semibold mb-4">Criar Filtro</h2>
+                <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6">
+                    <p class="text-slate-400">Usa a aba Importar com templates ou cria filtros compostos.</p>
                 </div>
             </div>
         </div>
@@ -182,7 +91,7 @@
         <!-- IMPORTAR -->
         <div id="content-importar" class="hidden">
             <div class="max-w-2xl">
-                <h2 class="text-2xl font-semibold mb-2">Importar Filtro (JSON)</h2>
+                <h2 class="text-2xl font-semibold mb-2">Importar Filtro</h2>
                 <textarea id="import-text" rows="8" placeholder="Cole o JSON aqui..." class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-sm font-mono"></textarea>
                 <button onclick="importarFiltro()" class="mt-3 w-full py-3 bg-emerald-500 hover:bg-emerald-600 rounded-3xl font-semibold">Importar</button>
             </div>
@@ -190,15 +99,18 @@
 
         <!-- JOGOS AO VIVO -->
         <div id="content-jogos" class="hidden">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h2 class="text-2xl font-semibold">Jogos ao Vivo</h2>
-                </div>
-                <button onclick="atualizarJogosAoVivo(true)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-3xl text-sm">Atualizar</button>
-            </div>
-            <div id="jogos-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            <h2 class="text-2xl font-semibold mb-4">Jogos ao Vivo</h2>
+            <button onclick="atualizarJogosAoVivo(true)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-3xl text-sm">Atualizar agora</button>
+            <div id="jogos-container" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4"></div>
         </div>
 
+        <!-- ALERTAS -->
+        <div id="content-alertas" class="hidden">
+            <div class="max-w-3xl">
+                <h2 class="text-2xl font-semibold mb-2">Alertas via Telegram</h2>
+                <p class="text-slate-400 mb-6">Exporta os filtros para usar no Make.com.</p>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -231,17 +143,16 @@
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div>
-                            <div class="font-semibold text-lg">${f.nome} 
-                                ${isComposto ? '<span class="text-xs ml-2 px-2 py-0.5 bg-purple-900 text-purple-300 rounded-full">COMPOSTO</span>' : ''}
-                            </div>
+                            <div class="font-semibold text-lg">${f.nome} ${isComposto ? '<span class="text-xs ml-2 px-2 py-0.5 bg-purple-900 text-purple-300 rounded">COMPOSTO</span>' : ''}</div>
                             <div class="text-sm text-slate-400 mt-1">${f.mercado || ''}</div>
                         </div>
                         <button onclick="eliminarFiltro(${i})" class="text-red-400"><i class="fa-solid fa-trash"></i></button>
                     </div>
                     
-                    <div class="mt-4 flex gap-x-2">
-                        <button onclick="exportarParaRobobet(${i})" class="flex-1 text-xs py-2 bg-slate-800 hover:bg-slate-700 rounded-2xl">Copiar RoboBet</button>
-                        <button onclick="exportarComoJSON(${i})" class="flex-1 text-xs py-2 bg-slate-800 hover:bg-slate-700 rounded-2xl">JSON</button>
+                    <div class="mt-4 grid grid-cols-3 gap-2">
+                        <button onclick="exportarParaRobobet(${i})" class="text-xs py-2 bg-slate-800 hover:bg-slate-700 rounded-2xl">RoboBet</button>
+                        <button onclick="exportarParaAlertas(${i})" class="text-xs py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl">Alertas</button>
+                        <button onclick="exportarComoJSON(${i})" class="text-xs py-2 bg-slate-800 hover:bg-slate-700 rounded-2xl">JSON</button>
                     </div>
                 `;
                 container.appendChild(card);
@@ -249,7 +160,7 @@
         }
 
         function eliminarFiltro(i) {
-            if (confirm('Eliminar este filtro?')) {
+            if (confirm('Eliminar filtro?')) {
                 filtros.splice(i, 1);
                 guardarFiltros();
                 renderFiltros();
@@ -258,113 +169,29 @@
 
         function exportarParaRobobet(i) {
             const f = filtros[i];
-            let texto = `=== ${f.nome} ===\nTipo: ${f.tipo}\nMercado: ${f.mercado}\n\n`;
-            if (f.condicoes && f.condicoes.length > 0) {
-                f.condicoes.forEach((c, idx) => texto += `${idx+1}. ${c.tipo} | ${c.lado} | ${c.metrica} | ${c.operador} ${c.valor}\n`);
-            }
-            navigator.clipboard.writeText(texto).then(() => alert('Copiado!'));
+            let texto = `=== ${f.nome} ===\nTipo: ${f.tipo}\n\n`;
+            if (f.condicoes) f.condicoes.forEach((c, idx) => texto += `${idx+1}. ${c.tipo} | ${c.lado} | ${c.metrica} | ${c.operador} ${c.valor}\n`);
+            navigator.clipboard.writeText(texto).then(() => alert('Copiado para RoboBet!'));
+        }
+
+        function exportarParaAlertas(i) {
+            const f = filtros[i];
+            const exportData = {
+                nome: f.nome,
+                tipo: f.tipo,
+                mercado: f.mercado,
+                condicoes: f.condicoes || [],
+                percentagemMin: f.percentagemMin || null,
+                percentagemMax: f.percentagemMax || null,
+                criadoEm: f.criadoEm
+            };
+            navigator.clipboard.writeText(JSON.stringify(exportData, null, 2)).then(() => {
+                alert('JSON para Alertas copiado! Cola no Make.com para testar.');
+            });
         }
 
         function exportarComoJSON(i) {
             navigator.clipboard.writeText(JSON.stringify(filtros[i], null, 2)).then(() => alert('JSON copiado!'));
-        }
-
-        function guardarFiltro() {
-            const nome = document.getElementById('filtro-nome').value.trim();
-            if (!nome) { alert('Dá um nome ao filtro.'); return; }
-
-            const novoFiltro = {
-                id: Date.now(),
-                nome: nome,
-                tipo: document.getElementById('filtro-tipo').value,
-                mercado: document.getElementById('filtro-mercado').value.trim(),
-                categoria: document.getElementById('filtro-categoria').value,
-                oddMin: document.getElementById('filtro-odd-min').value || null,
-                oddMax: document.getElementById('filtro-odd-max').value || null,
-                jornadaMin: document.getElementById('filtro-jornada-min').value || null,
-                jornadaMax: document.getElementById('filtro-jornada-max').value || null,
-                percentagemMin: document.getElementById('filtro-percentagem-min').value || null,
-                percentagemMax: document.getElementById('filtro-percentagem-max').value || null,
-                condicoes: obterCondicoesDoFormulario(),
-                criadoEm: new Date().toISOString()
-            };
-
-            filtros.push(novoFiltro);
-            guardarFiltros();
-            renderFiltros();
-            limparFormulario();
-            switchTab('filtros');
-            alert('Filtro guardado com sucesso!');
-        }
-
-        function obterCondicoesDoFormulario() {
-            const condicoes = [];
-            document.querySelectorAll('#condicoes-container .condition-row').forEach(row => {
-                condicoes.push({
-                    tipo: row.querySelector('.cond-tipo').value,
-                    lado: row.querySelector('.cond-lado').value,
-                    metrica: row.querySelector('.cond-metrica').value,
-                    periodo: row.querySelector('.cond-periodo').value,
-                    operador: row.querySelector('.cond-operador').value,
-                    valor: row.querySelector('.cond-valor').value
-                });
-            });
-            return condicoes;
-        }
-
-        function adicionarCondicao() {
-            const container = document.getElementById('condicoes-container');
-            const div = document.createElement('div');
-            div.className = `condition-row rounded-2xl p-3 flex flex-wrap gap-2 items-end`;
-            
-            div.innerHTML = `
-                <div class="flex-1 min-w-[100px]">
-                    <select class="cond-tipo w-full bg-slate-700 border border-slate-600 rounded-xl px-3 py-2 text-xs">
-                        <option value="AO VIVO">AO VIVO</option>
-                        <option value="PRÉ-JOGO">PRÉ-JOGO</option>
-                        <option value="QUALQUER">QUALQUER</option>
-                    </select>
-                </div>
-                <div class="flex-1 min-w-[90px]">
-                    <select class="cond-lado w-full bg-slate-700 border border-slate-600 rounded-xl px-3 py-2 text-xs">
-                        <option value="FAVORITO">FAVORITO</option>
-                        <option value="AMBOS">AMBOS</option>
-                        <option value="UNDERDOG">UNDERDOG</option>
-                    </select>
-                </div>
-                <div class="flex-1 min-w-[160px]">
-                    <select class="cond-metrica w-full bg-slate-700 border border-slate-600 rounded-xl px-3 py-2 text-xs">
-                        <option value="">Métrica</option>
-                        <option value="CG (Chutes + Escanteios)">CG</option>
-                        <option value="Ataques Perigosos">Ataques Perigosos</option>
-                        <option value="Chutes Totais">Chutes Totais</option>
-                        <option value="Escanteios Totais">Escanteios</option>
-                        <option value="Diferença de Escanteios">Diferença Escanteios</option>
-                        <option value="Events Goals">Events Goals</option>
-                        <option value="CV Gols Marcados">CV Gols</option>
-                        <option value="Cartões Vermelhos">Cartões Vermelhos</option>
-                    </select>
-                </div>
-                <div class="w-20"><input type="text" class="cond-periodo w-full bg-slate-700 border border-slate-600 rounded-xl px-3 py-2 text-xs" placeholder="15min / FT"></div>
-                <div class="w-16">
-                    <select class="cond-operador w-full bg-slate-700 border border-slate-600 rounded-xl px-3 py-2 text-xs">
-                        <option value=">=">>=</option><option value="<="><=</option><option value="=">=</option>
-                    </select>
-                </div>
-                <div class="w-20"><input type="text" class="cond-valor w-full bg-slate-700 border border-slate-600 rounded-xl px-3 py-2 text-xs" placeholder="Valor"></div>
-                <button onclick="this.parentElement.remove()" class="w-9 h-9 flex items-center justify-center text-red-400"><i class="fa-solid fa-times"></i></button>
-            `;
-            container.appendChild(div);
-        }
-
-        function limparFormulario() {
-            document.getElementById('filtro-nome').value = '';
-            document.getElementById('filtro-mercado').value = '';
-            document.getElementById('condicoes-container').innerHTML = '';
-        }
-
-        function abrirModalFiltroComposto() {
-            alert('Funcionalidade de Filtro Composto disponível na versão anterior. Posso adicionar de volta se quiseres.');
         }
 
         function importarFiltro() {
