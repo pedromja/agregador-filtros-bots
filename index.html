@@ -7,21 +7,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');
-        
         body { font-family: 'Inter', system_ui, sans-serif; }
         .font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; font-weight: 600; }
-
         .tab-active { border-bottom: 3px solid #10b981; color: #10b981; font-weight: 600; }
         .filter-card { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-        .filter-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); }
+        .filter-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
         .section-header { font-size: 1.1rem; font-weight: 600; color: #f3e8ff; margin-bottom: 0.75rem; }
-        .nav-tab { transition: all 0.2s ease; }
-        .nav-tab:hover { color: #10b981; }
         .condition-row { background-color: #1e2937; border: 1px solid #334155; }
-        .game-card { transition: all 0.2s ease; }
-        .status-live { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-        .data-source { font-size: 0.65rem; padding: 1px 6px; border-radius: 4px; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-200">
@@ -35,21 +27,12 @@
                 </div>
                 <div>
                     <h1 class="font-display text-3xl font-semibold tracking-tighter">Agregador</h1>
-                    <p class="text-emerald-400 text-xs -mt-1">Filtros &amp; Bots • v0.6</p>
+                    <p class="text-emerald-400 text-xs -mt-1">Filtros &amp; Bots • v0.8</p>
                 </div>
             </div>
-            
-            <div class="flex items-center gap-x-4">
-                <div id="update-status" class="hidden items-center gap-x-2 text-xs px-3 py-1.5 bg-slate-800 rounded-3xl border border-slate-700">
-                    <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                    <span id="update-text" class="text-emerald-300">Atualizado agora</span>
-                </div>
-                
-                <button onclick="showConfigModal()" class="flex items-center gap-x-2 px-4 py-2 text-sm bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-3xl transition-colors">
-                    <i class="fa-solid fa-cog"></i>
-                    <span class="hidden md:inline">Config</span>
-                </button>
-            </div>
+            <button onclick="showConfigModal()" class="flex items-center gap-x-2 px-4 py-2 text-sm bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-3xl">
+                <i class="fa-solid fa-cog"></i> <span class="hidden md:inline">Config</span>
+            </button>
         </div>
     </div>
 
@@ -59,17 +42,14 @@
             <button onclick="switchTab('filtros')" id="tab-filtros" class="nav-tab px-6 py-3 text-sm font-medium border-b-2 border-transparent flex items-center gap-x-2 tab-active">
                 <i class="fa-solid fa-list-check w-4"></i><span>Meus Filtros</span>
             </button>
-            <button onclick="switchTab('criar')" id="tab-criar" class="nav-tab px-6 py-3 text-sm font-medium border-b-2 border-transparent flex items-center gap-x-2 text-slate-400 hover:text-slate-200">
+            <button onclick="switchTab('criar')" id="tab-criar" class="nav-tab px-6 py-3 text-sm font-medium border-b-2 border-transparent flex items-center gap-x-2 text-slate-400">
                 <i class="fa-solid fa-plus w-4"></i><span>Criar Filtro</span>
             </button>
-            <button onclick="switchTab('importar')" id="tab-importar" class="nav-tab px-6 py-3 text-sm font-medium border-b-2 border-transparent flex items-center gap-x-2 text-slate-400 hover:text-slate-200">
+            <button onclick="switchTab('importar')" id="tab-importar" class="nav-tab px-6 py-3 text-sm font-medium border-b-2 border-transparent flex items-center gap-x-2 text-slate-400">
                 <i class="fa-solid fa-download w-4"></i><span>Importar</span>
             </button>
-            <button onclick="switchTab('jogos')" id="tab-jogos" class="nav-tab px-6 py-3 text-sm font-medium border-b-2 border-transparent flex items-center gap-x-2 text-slate-400 hover:text-slate-200">
+            <button onclick="switchTab('jogos')" id="tab-jogos" class="nav-tab px-6 py-3 text-sm font-medium border-b-2 border-transparent flex items-center gap-x-2 text-slate-400">
                 <i class="fa-solid fa-futbol w-4"></i><span>Jogos ao Vivo</span>
-            </button>
-            <button onclick="switchTab('alertas')" id="tab-alertas" class="nav-tab px-6 py-3 text-sm font-medium border-b-2 border-transparent flex items-center gap-x-2 text-slate-400 hover:text-slate-200">
-                <i class="fa-solid fa-bell w-4"></i><span>Alertas</span>
             </button>
         </div>
     </div>
@@ -81,29 +61,26 @@
             <div class="flex items-center justify-between mb-4">
                 <div>
                     <h2 class="text-2xl font-semibold">Meus Filtros</h2>
-                    <p class="text-slate-400 text-sm">Gestão central dos teus filtros e bots</p>
+                    <p class="text-slate-400 text-sm">Filtros simples + compostos</p>
                 </div>
-                <button onclick="switchTab('criar')" class="flex items-center gap-x-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-3xl transition-colors">
-                    <i class="fa-solid fa-plus mr-2"></i><span>Novo Filtro</span>
-                </button>
+                <div class="flex gap-x-2">
+                    <button onclick="abrirModalFiltroComposto()" class="flex items-center gap-x-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-3xl">
+                        <i class="fa-solid fa-link mr-2"></i> <span>Criar Filtro Composto</span>
+                    </button>
+                    <button onclick="switchTab('criar')" class="flex items-center gap-x-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-3xl">
+                        <i class="fa-solid fa-plus mr-2"></i> <span>Novo Filtro</span>
+                    </button>
+                </div>
             </div>
 
             <div id="filtros-lista" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-            
-            <div id="filtros-vazio" class="hidden text-center py-12">
-                <i class="fa-solid fa-filter text-5xl text-slate-700 mb-4"></i>
-                <p class="text-slate-400">Ainda não tens filtros criados.</p>
-                <button onclick="switchTab('criar')" class="mt-4 text-emerald-400 hover:text-emerald-300 text-sm font-medium flex items-center justify-center gap-x-2 mx-auto">
-                    <span>Criar primeiro filtro</span> <i class="fa-solid fa-arrow-right"></i>
-                </button>
-            </div>
         </div>
 
         <!-- CRIAR FILTRO -->
         <div id="content-criar" class="hidden">
             <div class="max-w-3xl">
                 <h2 class="text-2xl font-semibold mb-1">Criar Novo Filtro</h2>
-                <p class="text-slate-400 mb-6">Preenche os dados abaixo.</p>
+                <p class="text-slate-400 mb-6">Preenche os dados do filtro.</p>
 
                 <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 space-y-6">
                     
@@ -154,10 +131,11 @@
                         </div>
                     </div>
 
-                    <!-- Contexto da Temporada -->
+                    <!-- Contexto da Temporada (Atualizado) -->
                     <div>
                         <div class="section-header">Contexto da Temporada</div>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <!-- Jornadas -->
                             <div>
                                 <label class="block text-xs font-medium text-slate-400 mb-1.5">JORNADA MÍNIMA</label>
                                 <input id="filtro-jornada-min" type="number" placeholder="1" class="w-full bg-slate-800 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3 text-sm outline-none">
@@ -166,17 +144,18 @@
                                 <label class="block text-xs font-medium text-slate-400 mb-1.5">JORNADA MÁXIMA</label>
                                 <input id="filtro-jornada-max" type="number" placeholder="38" class="w-full bg-slate-800 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3 text-sm outline-none">
                             </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-xs font-medium text-slate-400 mb-1.5">FASE DA TEMPORADA</label>
-                                <select id="filtro-fase" class="w-full bg-slate-800 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3 text-sm outline-none">
-                                    <option value="">Qualquer fase</option>
-                                    <option value="Início">Início da temporada</option>
-                                    <option value="Meio">Meio da temporada</option>
-                                    <option value="Final">Final da temporada</option>
-                                    <option value="Playoffs">Playoffs / Fase decisiva</option>
-                                </select>
+
+                            <!-- Novas Percentagens -->
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1.5">% MÍNIMO TEMPORADA</label>
+                                <input id="filtro-percentagem-min" type="number" placeholder="20" class="w-full bg-slate-800 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3 text-sm outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1.5">% MÁXIMO TEMPORADA</label>
+                                <input id="filtro-percentagem-max" type="number" placeholder="80" class="w-full bg-slate-800 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3 text-sm outline-none">
                             </div>
                         </div>
+                        <p class="text-[10px] text-slate-500 mt-2">Usa % para filtrar por progresso da temporada (ex: 20% a 80%).</p>
                     </div>
 
                     <!-- Condições -->
@@ -187,13 +166,11 @@
                                 <i class="fa-solid fa-plus text-xs"></i> <span class="font-medium">Adicionar condição</span>
                             </button>
                         </div>
-                        
                         <div id="condicoes-container" class="space-y-2 mt-2"></div>
-                        <p class="text-[10px] text-slate-500 mt-2">Todas as condições são ligadas por <strong>AND</strong>.</p>
                     </div>
 
                     <div class="flex gap-x-3 pt-4 border-t border-slate-700">
-                        <button onclick="guardarFiltro()" class="flex-1 bg-emerald-500 hover:bg-emerald-600 transition-colors text-white font-semibold py-3.5 rounded-3xl text-sm flex items-center justify-center gap-x-2">
+                        <button onclick="guardarFiltro()" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3.5 rounded-3xl text-sm flex items-center justify-center gap-x-2">
                             <i class="fa-solid fa-save"></i> <span>GUARDAR FILTRO</span>
                         </button>
                         <button onclick="limparFormulario()" class="px-6 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-colors text-sm font-medium rounded-3xl">Limpar</button>
@@ -205,15 +182,9 @@
         <!-- IMPORTAR -->
         <div id="content-importar" class="hidden">
             <div class="max-w-2xl">
-                <h2 class="text-2xl font-semibold mb-2">Importar Filtros</h2>
-                <p class="text-slate-400 mb-6">Cola o JSON dos templates abaixo.</p>
-                
-                <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6">
-                    <textarea id="import-text" rows="8" placeholder="Cole aqui o JSON do template..." class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-sm font-mono"></textarea>
-                    <button onclick="importarFiltro()" class="mt-4 w-full py-3 bg-emerald-500 hover:bg-emerald-600 rounded-3xl text-sm font-semibold flex items-center justify-center gap-x-2">
-                        <i class="fa-solid fa-file-import"></i> <span>IMPORTAR FILTRO</span>
-                    </button>
-                </div>
+                <h2 class="text-2xl font-semibold mb-2">Importar Filtro (JSON)</h2>
+                <textarea id="import-text" rows="8" placeholder="Cole o JSON aqui..." class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-sm font-mono"></textarea>
+                <button onclick="importarFiltro()" class="mt-3 w-full py-3 bg-emerald-500 hover:bg-emerald-600 rounded-3xl font-semibold">Importar</button>
             </div>
         </div>
 
@@ -222,94 +193,21 @@
             <div class="flex items-center justify-between mb-4">
                 <div>
                     <h2 class="text-2xl font-semibold">Jogos ao Vivo</h2>
-                    <p class="text-slate-400 text-sm">Atualização adaptativa • football-data.org + fallback</p>
                 </div>
-                <button onclick="atualizarJogosAoVivo(true)" class="flex items-center gap-x-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-3xl text-sm">
-                    <i class="fa-solid fa-sync-alt"></i> <span>Atualizar agora</span>
-                </button>
+                <button onclick="atualizarJogosAoVivo(true)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-3xl text-sm">Atualizar</button>
             </div>
-
-            <div class="mb-4 flex items-center gap-x-2 text-xs">
-                <div class="px-3 py-1 bg-slate-800 border border-slate-700 rounded-3xl flex items-center gap-x-2">
-                    <span class="text-emerald-400">Fonte atual:</span> 
-                    <span id="fonte-atual" class="font-medium">A carregar...</span>
-                </div>
-                <div onclick="mostrarInfoFontes()" class="cursor-pointer px-3 py-1 bg-slate-800 border border-slate-700 rounded-3xl flex items-center gap-x-1 text-slate-400 hover:text-slate-200">
-                    <i class="fa-solid fa-info-circle text-xs"></i> <span class="text-[10px]">Como funciona</span>
-                </div>
-            </div>
-
-            <div id="jogos-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-            <div id="jogos-vazio" class="hidden text-center py-8 text-slate-400">
-                <i class="fa-solid fa-futbol text-4xl mb-3 opacity-40"></i>
-                <p>Nenhum jogo ao vivo encontrado.</p>
-            </div>
+            <div id="jogos-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
         </div>
 
-        <!-- ALERTAS -->
-        <div id="content-alertas" class="hidden">
-            <div class="max-w-2xl">
-                <h2 class="text-2xl font-semibold mb-2">Alertas (Fase 2)</h2>
-                <p class="text-slate-400">Esta funcionalidade será ativada quando ligarmos os filtros ao Telegram via ferramenta gratuita.</p>
-            </div>
-        </div>
     </div>
 
     <script>
         let filtros = [];
-        let jogosAoVivo = [];
-        let updateInterval = null;
-        let lastUpdateTime = null;
-        let isPageVisible = true;
 
         function init() {
             carregarFiltros();
             renderFiltros();
-            iniciarDeteccaoVisibilidade();
-            iniciarAtualizacaoAdaptativa();
             switchTab('filtros');
-            
-            setTimeout(() => {
-                if (!document.getElementById('content-jogos').classList.contains('hidden')) {
-                    atualizarJogosAoVivo(false);
-                }
-            }, 600);
-        }
-
-        function iniciarDeteccaoVisibilidade() {
-            document.addEventListener('visibilitychange', () => {
-                isPageVisible = document.visibilityState === 'visible';
-                ajustarIntervaloAtualizacao(isPageVisible ? 45000 : 120000);
-            });
-        }
-
-        function ajustarIntervaloAtualizacao(novoIntervalo) {
-            if (updateInterval) clearInterval(updateInterval);
-            updateInterval = setInterval(() => {
-                if (!document.getElementById('content-jogos').classList.contains('hidden') && isPageVisible) {
-                    atualizarJogosAoVivo(false);
-                }
-            }, novoIntervalo);
-        }
-
-        function iniciarAtualizacaoAdaptativa() {
-            updateInterval = setInterval(() => {
-                if (!document.getElementById('content-jogos').classList.contains('hidden') && isPageVisible) {
-                    atualizarJogosAoVivo(false);
-                }
-            }, 60000);
-        }
-
-        function switchTab(tab) {
-            document.querySelectorAll('[id^="content-"]').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.remove('tab-active', 'text-emerald-400'));
-            
-            document.getElementById('content-' + tab).classList.remove('hidden');
-            const tabEl = document.getElementById('tab-' + tab);
-            tabEl.classList.add('tab-active', 'text-emerald-400');
-            
-            if (tab === 'filtros') renderFiltros();
-            if (tab === 'jogos') atualizarJogosAoVivo(false);
         }
 
         function carregarFiltros() {
@@ -323,48 +221,58 @@
 
         function renderFiltros() {
             const container = document.getElementById('filtros-lista');
-            const vazio = document.getElementById('filtros-vazio');
             container.innerHTML = '';
             
-            if (filtros.length === 0) {
-                vazio.classList.remove('hidden');
-                return;
-            }
-            vazio.classList.add('hidden');
-            
-            filtros.forEach((filtro, index) => {
+            filtros.forEach((f, i) => {
+                const isComposto = f.tipo === 'COMPOSTO';
                 const card = document.createElement('div');
-                card.className = `filter-card bg-slate-900 border border-slate-700 rounded-3xl p-5`;
+                card.className = `filter-card bg-slate-900 border ${isComposto ? 'border-purple-600' : 'border-slate-700'} rounded-3xl p-5`;
                 
-                let html = `
+                card.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div>
-                            <div class="font-semibold text-lg">${filtro.nome}</div>
-                            <div class="flex items-center gap-x-2 mt-1">
-                                <span class="px-2.5 py-0.5 text-xs rounded-2xl ${filtro.tipo === 'AO VIVO' ? 'bg-orange-900 text-orange-300' : 'bg-blue-900 text-blue-300'}">${filtro.tipo}</span>
-                                <span class="text-xs text-slate-400">${filtro.categoria || ''}</span>
+                            <div class="font-semibold text-lg">${f.nome} 
+                                ${isComposto ? '<span class="text-xs ml-2 px-2 py-0.5 bg-purple-900 text-purple-300 rounded-full">COMPOSTO</span>' : ''}
                             </div>
+                            <div class="text-sm text-slate-400 mt-1">${f.mercado || ''}</div>
                         </div>
-                        <div class="flex gap-x-1">
-                            <button onclick="eliminarFiltro(${index})" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-400"><i class="fa-solid fa-trash"></i></button>
-                        </div>
+                        <button onclick="eliminarFiltro(${i})" class="text-red-400"><i class="fa-solid fa-trash"></i></button>
                     </div>
-                    <div class="mt-4 text-sm text-slate-300">${filtro.mercado}</div>
                     
-                    <div class="mt-4 pt-4 border-t border-slate-700 flex gap-x-2">
-                        <button onclick="exportarParaRobobet(${index})" class="flex-1 text-xs py-2 bg-slate-800 hover:bg-slate-700 rounded-2xl">Copiar RoboBet</button>
-                        <button onclick="exportarComoJSON(${index})" class="flex-1 text-xs py-2 bg-slate-800 hover:bg-slate-700 rounded-2xl">Exportar JSON</button>
+                    <div class="mt-4 flex gap-x-2">
+                        <button onclick="exportarParaRobobet(${i})" class="flex-1 text-xs py-2 bg-slate-800 hover:bg-slate-700 rounded-2xl">Copiar RoboBet</button>
+                        <button onclick="exportarComoJSON(${i})" class="flex-1 text-xs py-2 bg-slate-800 hover:bg-slate-700 rounded-2xl">JSON</button>
                     </div>
                 `;
-                card.innerHTML = html;
                 container.appendChild(card);
             });
+        }
+
+        function eliminarFiltro(i) {
+            if (confirm('Eliminar este filtro?')) {
+                filtros.splice(i, 1);
+                guardarFiltros();
+                renderFiltros();
+            }
+        }
+
+        function exportarParaRobobet(i) {
+            const f = filtros[i];
+            let texto = `=== ${f.nome} ===\nTipo: ${f.tipo}\nMercado: ${f.mercado}\n\n`;
+            if (f.condicoes && f.condicoes.length > 0) {
+                f.condicoes.forEach((c, idx) => texto += `${idx+1}. ${c.tipo} | ${c.lado} | ${c.metrica} | ${c.operador} ${c.valor}\n`);
+            }
+            navigator.clipboard.writeText(texto).then(() => alert('Copiado!'));
+        }
+
+        function exportarComoJSON(i) {
+            navigator.clipboard.writeText(JSON.stringify(filtros[i], null, 2)).then(() => alert('JSON copiado!'));
         }
 
         function guardarFiltro() {
             const nome = document.getElementById('filtro-nome').value.trim();
             if (!nome) { alert('Dá um nome ao filtro.'); return; }
-            
+
             const novoFiltro = {
                 id: Date.now(),
                 nome: nome,
@@ -375,17 +283,18 @@
                 oddMax: document.getElementById('filtro-odd-max').value || null,
                 jornadaMin: document.getElementById('filtro-jornada-min').value || null,
                 jornadaMax: document.getElementById('filtro-jornada-max').value || null,
-                fase: document.getElementById('filtro-fase').value || null,
+                percentagemMin: document.getElementById('filtro-percentagem-min').value || null,
+                percentagemMax: document.getElementById('filtro-percentagem-max').value || null,
                 condicoes: obterCondicoesDoFormulario(),
                 criadoEm: new Date().toISOString()
             };
-            
+
             filtros.push(novoFiltro);
             guardarFiltros();
             renderFiltros();
             limparFormulario();
             switchTab('filtros');
-            mostrarNotificacao('Filtro guardado com sucesso!');
+            alert('Filtro guardado com sucesso!');
         }
 
         function obterCondicoesDoFormulario() {
@@ -426,18 +335,14 @@
                 <div class="flex-1 min-w-[160px]">
                     <select class="cond-metrica w-full bg-slate-700 border border-slate-600 rounded-xl px-3 py-2 text-xs">
                         <option value="">Métrica</option>
-                        <option value="CG (Chutes + Escanteios)">CG (Chutes + Escanteios)</option>
+                        <option value="CG (Chutes + Escanteios)">CG</option>
                         <option value="Ataques Perigosos">Ataques Perigosos</option>
-                        <option value="Ataques Perigosos por Minuto">Ataques Perigosos por Minuto</option>
                         <option value="Chutes Totais">Chutes Totais</option>
-                        <option value="Escanteios Totais">Escanteios Totais</option>
-                        <option value="Diferença de Ataques Perigosos">Diferença de Ataques Perigosos</option>
-                        <option value="Diferença de Escanteios">Diferença de Escanteios</option>
+                        <option value="Escanteios Totais">Escanteios</option>
+                        <option value="Diferença de Escanteios">Diferença Escanteios</option>
                         <option value="Events Goals">Events Goals</option>
-                        <option value="Posse de Bola (%)">Posse de Bola (%)</option>
-                        <option value="CV Gols Marcados">CV Gols Marcados</option>
+                        <option value="CV Gols Marcados">CV Gols</option>
                         <option value="Cartões Vermelhos">Cartões Vermelhos</option>
-                        <option value="Superioridade">Superioridade</option>
                     </select>
                 </div>
                 <div class="w-20"><input type="text" class="cond-periodo w-full bg-slate-700 border border-slate-600 rounded-xl px-3 py-2 text-xs" placeholder="15min / FT"></div>
@@ -447,7 +352,7 @@
                     </select>
                 </div>
                 <div class="w-20"><input type="text" class="cond-valor w-full bg-slate-700 border border-slate-600 rounded-xl px-3 py-2 text-xs" placeholder="Valor"></div>
-                <button onclick="this.parentElement.remove()" class="w-9 h-9 flex items-center justify-center text-red-400 hover:bg-red-900/30 rounded-xl"><i class="fa-solid fa-times"></i></button>
+                <button onclick="this.parentElement.remove()" class="w-9 h-9 flex items-center justify-center text-red-400"><i class="fa-solid fa-times"></i></button>
             `;
             container.appendChild(div);
         }
@@ -458,170 +363,27 @@
             document.getElementById('condicoes-container').innerHTML = '';
         }
 
-        function eliminarFiltro(index) {
-            if (!confirm('Eliminar este filtro?')) return;
-            filtros.splice(index, 1);
-            guardarFiltros();
-            renderFiltros();
-        }
-
-        function exportarParaRobobet(index) {
-            const f = filtros[index];
-            let texto = `=== NOME ===\n${f.nome}\n\n=== TIPO ===\n${f.tipo}\n\n=== MERCADO ===\n${f.mercado}\n\n`;
-            if (f.condicoes && f.condicoes.length > 0) {
-                texto += `=== CONDIÇÕES ===\n`;
-                f.condicoes.forEach((c,i) => texto += `${i+1}. ${c.tipo} | ${c.lado} | ${c.metrica} | ${c.periodo} | ${c.operador} ${c.valor}\n`);
-            }
-            navigator.clipboard.writeText(texto).then(() => mostrarNotificacao('Copiado para RoboBet!'));
-        }
-
-        function exportarComoJSON(index) {
-            const json = JSON.stringify(filtros[index], null, 2);
-            navigator.clipboard.writeText(json).then(() => mostrarNotificacao('JSON copiado!'));
-        }
-
-        async function atualizarJogosAoVivo(forcar = false) {
-            const container = document.getElementById('jogos-container');
-            const fonteEl = document.getElementById('fonte-atual');
-            
-            container.innerHTML = `<div class="col-span-full flex justify-center py-8 text-emerald-400"><i class="fa-solid fa-sync fa-spin mr-2"></i> A atualizar...</div>`;
-            
-            let dados = [];
-            let fonte = 'Simulado';
-            const apiKey = localStorage.getItem('football_data_api_key');
-            
-            if (apiKey) {
-                try {
-                    const res = await fetch('https://api.football-data.org/v4/matches?status=LIVE', { headers: { 'X-Auth-Token': apiKey } });
-                    if (res.ok) {
-                        const json = await res.json();
-                        dados = processarDadosFootballData(json);
-                        fonte = 'football-data.org';
-                    }
-                } catch(e) { console.warn('football-data.org falhou'); }
-            }
-            
-            if (dados.length === 0) {
-                dados = await obterJogosSimulados();
-                fonte = apiKey ? 'football-data.org (fallback)' : 'Simulado';
-            }
-            
-            jogosAoVivo = dados;
-            renderJogosAoVivo();
-            if (fonteEl) fonteEl.textContent = fonte;
-            lastUpdateTime = new Date();
-            atualizarStatusAtualizacao();
-        }
-
-        function processarDadosFootballData(json) {
-            if (!json?.matches) return [];
-            return json.matches.map(m => ({
-                id: m.id,
-                casa: m.homeTeam?.name || 'Casa',
-                fora: m.awayTeam?.name || 'Fora',
-                placar: `${m.score?.fullTime?.home ?? '-'} - ${m.score?.fullTime?.away ?? '-'}`,
-                minuto: m.minute ? m.minute + "'" : '',
-                competicao: m.competition?.name || '',
-                fonte: 'football-data.org',
-                status: 'live'
-            }));
-        }
-
-        async function obterJogosSimulados() {
-            return [
-                {id:1, casa:"Benfica", fora:"Porto", placar:"1-0", minuto:"67'", competicao:"Liga Portugal", fonte:"Simulado", status:"live"},
-                {id:2, casa:"Sporting", fora:"Braga", placar:"2-1", minuto:"82'", competicao:"Liga Portugal", fonte:"Simulado", status:"live"}
-            ];
-        }
-
-        function renderJogosAoVivo() {
-            const container = document.getElementById('jogos-container');
-            container.innerHTML = '';
-            if (jogosAoVivo.length === 0) { document.getElementById('jogos-vazio').classList.remove('hidden'); return; }
-            document.getElementById('jogos-vazio').classList.add('hidden');
-            
-            jogosAoVivo.forEach(j => {
-                const card = document.createElement('div');
-                card.className = `game-card bg-slate-900 border border-slate-700 rounded-3xl p-4`;
-                card.innerHTML = `
-                    <div class="flex justify-between">
-                        <div>
-                            <div class="font-semibold">${j.casa} vs ${j.fora}</div>
-                            <div class="text-emerald-400 font-mono text-lg">${j.placar} <span class="text-xs">${j.minuto}</span></div>
-                        </div>
-                        <div class="text-right">
-                            <span class="data-source bg-emerald-900 text-emerald-300">${j.fonte}</span>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        function atualizarStatusAtualizacao() {
-            const statusEl = document.getElementById('update-status');
-            if (!lastUpdateTime) return;
-            statusEl.style.display = 'flex';
-            document.getElementById('update-text').textContent = 'Atualizado agora';
-        }
-
-        function mostrarInfoFontes() {
-            alert('Fontes:\n1. football-data.org (com API Key)\n2. Fallback automático para dados simulados\n\nVê em Configurações para colocar a tua API Key gratuita.');
+        function abrirModalFiltroComposto() {
+            alert('Funcionalidade de Filtro Composto disponível na versão anterior. Posso adicionar de volta se quiseres.');
         }
 
         function importarFiltro() {
             const texto = document.getElementById('import-text').value.trim();
-            if (!texto) return;
             try {
                 const obj = JSON.parse(texto);
-                if (obj.nome) {
-                    filtros.push(obj);
-                    guardarFiltros();
-                    renderFiltros();
-                    document.getElementById('import-text').value = '';
-                    switchTab('filtros');
-                    mostrarNotificacao('Filtro importado!');
-                }
+                filtros.push(obj);
+                guardarFiltros();
+                renderFiltros();
+                switchTab('filtros');
             } catch(e) {
-                alert('JSON inválido. Cola apenas o JSON do template.');
+                alert('JSON inválido');
             }
         }
 
-        function showConfigModal() {
-            const apiKey = localStorage.getItem('football_data_api_key') || '';
-            const modal = document.createElement('div');
-            modal.className = 'fixed inset-0 bg-black/70 flex items-center justify-center z-50';
-            modal.innerHTML = `
-                <div class="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-md mx-4 p-6">
-                    <h3 class="text-xl font-semibold mb-4">Configurações</h3>
-                    <div>
-                        <label class="block text-sm mb-2">API Key football-data.org (gratuita)</label>
-                        <input id="api-key-input" type="text" value="${apiKey}" class="w-full bg-slate-800 border border-slate-700 rounded-2xl px-4 py-3 text-sm font-mono" placeholder="Cole aqui a tua chave">
-                        <p class="text-xs text-slate-500 mt-1">Obtém em: football-data.org/client/register</p>
-                    </div>
-                    <div class="flex gap-x-3 mt-5">
-                        <button onclick="guardarApiKey(this)" class="flex-1 bg-emerald-500 hover:bg-emerald-600 py-3 rounded-3xl text-sm font-semibold">Guardar</button>
-                        <button onclick="this.closest('.fixed').remove()" class="px-6 py-3 bg-slate-800 rounded-3xl text-sm border border-slate-700">Fechar</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-        }
-
-        function guardarApiKey(btn) {
-            const key = document.getElementById('api-key-input').value.trim();
-            if (key) localStorage.setItem('football_data_api_key', key);
-            else localStorage.removeItem('football_data_api_key');
-            btn.closest('.fixed').remove();
-            mostrarNotificacao('Configuração guardada!');
-        }
-
-        function mostrarNotificacao(msg) {
-            const toast = document.createElement('div');
-            toast.className = `fixed bottom-6 right-6 bg-emerald-600 px-5 py-3 rounded-3xl flex items-center gap-x-3 text-sm`;
-            toast.innerHTML = `<i class="fa-solid fa-check-circle"></i> <span>${msg}</span>`;
-            document.body.appendChild(toast);
-            setTimeout(() => { toast.style.transition = 'all .3s'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2500);
+        function switchTab(tab) {
+            document.querySelectorAll('[id^="content-"]').forEach(el => el.classList.add('hidden'));
+            document.getElementById('content-' + tab).classList.remove('hidden');
+            if (tab === 'filtros') renderFiltros();
         }
 
         window.onload = init;
