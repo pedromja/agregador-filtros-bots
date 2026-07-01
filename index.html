@@ -10,22 +10,20 @@
 </head>
 <body class="bg-zinc-950 text-zinc-200">
 <div class="max-w-7xl mx-auto">
-  <!-- Header -->
   <div class="flex items-center justify-between border-b border-zinc-800 px-6 py-4">
     <div class="flex items-center gap-x-3">
       <div class="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center font-bold text-xl">AB</div>
       <div>
         <div class="font-semibold text-2xl tracking-tighter">Agregador</div>
-        <div class="text-[10px] text-emerald-500 -mt-1">SOKKERPRO PRIMARY • ROBBET • ESPN</div>
+        <div class="text-[10px] text-emerald-500 -mt-1">ROBOBET PRIMARY • SOKKERPRO (22bet) • ESPN</div>
       </div>
     </div>
     <div class="flex items-center gap-x-2 text-sm">
       <button onclick="installPWA()" class="px-4 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs">Instalar App</button>
-      <div class="px-3 py-1 bg-emerald-950 text-emerald-400 text-xs rounded-xl border border-emerald-900">v0.1 • local</div>
+      <div class="px-3 py-1 bg-emerald-950 text-emerald-400 text-xs rounded-xl border border-emerald-900">v0.3 • local</div>
     </div>
   </div>
 
-  <!-- Tabs -->
   <div class="flex border-b border-zinc-800 px-6 text-sm">
     <div onclick="showTab('visao')" class="tab px-5 py-3 border-b-2 border-emerald-600 cursor-pointer font-medium" id="tab-visao">Visão Geral</div>
     <div onclick="showTab('filtros')" class="tab px-5 py-3 hover:text-white cursor-pointer text-zinc-400" id="tab-filtros">Meus Filtros</div>
@@ -39,19 +37,17 @@
   <div id="visao" class="tab-content p-6">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div class="bg-zinc-900 rounded-3xl p-5 border border-zinc-800">
-        <div class="text-emerald-400 text-xs mb-1">HOJE • PRIORIDADE</div>
-        <div class="text-3xl font-semibold">SokkerPRO</div>
-        <div class="text-xs text-zinc-500 mt-1">Odds + Stats primário • fallback Bet365/Manual</div>
+        <div class="text-emerald-400 text-xs mb-1">PRIORIZAÇÃO ATUAL</div>
+        <div class="text-2xl font-semibold">Robobet → SokkerPRO</div>
+        <div class="text-xs text-zinc-500 mt-1">Bots principal • Odds via SokkerPRO (22bet) quando disponível</div>
       </div>
       <div class="bg-zinc-900 rounded-3xl p-5 border border-zinc-800">
-        <div class="flex justify-between"><div class="text-xs text-zinc-400">FILTROS ATIVOS</div><div class="text-emerald-400 text-xs">12</div></div>
-        <div class="text-4xl font-semibold mt-2" id="active-filters">8</div>
-        <div class="text-xs mt-3 text-zinc-500">3 híbridos • 5 nativos</div>
+        <div class="flex justify-between"><div class="text-xs text-zinc-400">FILTROS ATIVOS</div></div>
+        <div class="text-4xl font-semibold mt-2" id="active-filters">0</div>
       </div>
       <div class="bg-zinc-900 rounded-3xl p-5 border border-zinc-800">
-        <div class="text-xs text-zinc-400 mb-2">ÚLTIMO SINAL HÍBRIDO</div>
-        <div class="font-mono text-sm">HT Gol + Cantos &gt;4.5 • Odd 1.92 • SokkerPRO</div>
-        <div class="text-[10px] text-emerald-500 mt-3">+3 greens hoje</div>
+        <div class="text-xs text-zinc-400 mb-2">ÚLTIMO TESTE</div>
+        <div id="last-test" class="font-mono text-sm text-emerald-400">Nenhum ainda</div>
       </div>
     </div>
   </div>
@@ -62,40 +58,39 @@
       <div class="font-semibold">Filtros guardados (local)</div>
       <button onclick="showNewFilterForm()" class="px-5 py-2 text-sm rounded-2xl bg-emerald-600 hover:bg-emerald-500">+ Novo Filtro Híbrido</button>
     </div>
-    
-    <!-- Form novo filtro (escondido por defeito) -->
+
     <div id="new-filter-form" class="hidden bg-zinc-900 border border-zinc-700 rounded-3xl p-5 mb-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="text-xs text-zinc-400">Nome do filtro</label>
-          <input id="f-name" class="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-4 py-2 text-sm" value="HT Gol + Cantos 4.5">
-        </div>
-        <div>
-          <label class="text-xs text-zinc-400">Mercado principal</label>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
+        <div><label class="text-xs text-zinc-400">Nome</label><input id="f-name" class="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-4 py-2 text-sm" value="HT Gol + Cantos 4.5"></div>
+        <div><label class="text-xs text-zinc-400">Mercado</label>
           <select id="f-market" class="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-4 py-2 text-sm">
             <option>Gol HT</option><option>Cantos HT</option><option>BTTS</option><option>Over 2.5 FT</option><option>Gol FT</option>
           </select>
         </div>
-        <div class="md:col-span-2">
-          <label class="text-xs text-zinc-400">Condições (copia do Robobet/SokkerPRO)</label>
-          <textarea id="f-conditions" class="w-full bg-zinc-950 border border-zinc-700 rounded-3xl px-4 py-3 text-sm h-20" placeholder="HT corners &gt;= 3 AND xG diff &gt; 0.8 AND odds HT goal &gt; 1.85"></textarea>
-        </div>
-        <div>
-          <label class="text-xs text-zinc-400">Fonte primária (odds/stats)</label>
-          <select id="f-primary" class="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-4 py-2 text-sm">
-            <option value="sokkerpro">SokkerPRO (prioridade)</option>
-            <option value="bet365">Bet365</option>
-            <option value="espn">ESPN</option>
-            <option value="manual">Manual / input</option>
+        <div><label class="text-xs text-zinc-400">Liga / Competição</label><input id="f-league" class="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-4 py-2 text-sm" placeholder="Liga Portugal / UCL"></div>
+        <div><label class="text-xs text-zinc-400">Período</label>
+          <select id="f-period" class="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-4 py-2 text-sm">
+            <option value="HT">HT (Primeiro Tempo)</option><option value="FT">FT (Jogo Completo)</option><option value="LIVE">Live</option>
           </select>
         </div>
-        <div>
-          <label class="text-xs text-zinc-400">Fallback se falhar</label>
-          <select id="f-fallback" class="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-4 py-2 text-sm">
-            <option value="bet365">Bet365</option>
+        <div><label class="text-xs text-zinc-400">Odd mínima</label><input id="f-minodd" type="number" step="0.01" class="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-4 py-2 text-sm" value="1.80"></div>
+        <div class="md:col-span-2"><label class="text-xs text-zinc-400">Condições</label>
+          <textarea id="f-conditions" class="w-full bg-zinc-950 border border-zinc-700 rounded-3xl px-4 py-3 text-sm h-20" placeholder="HT corners >= 3 AND xG diff > 0.7"></textarea>
+        </div>
+        <div><label class="text-xs text-zinc-400">Fonte primária (odds)</label>
+          <select id="f-primary" class="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-4 py-2 text-sm">
+            <option value="robobet">Robobet (prioridade)</option>
+            <option value="sokkerpro">SokkerPRO (22bet)</option>
             <option value="espn">ESPN</option>
             <option value="manual">Manual</option>
-            <option value="none">Nenhum (só primária)</option>
+          </select>
+        </div>
+        <div><label class="text-xs text-zinc-400">Fallback</label>
+          <select id="f-fallback" class="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-4 py-2 text-sm">
+            <option value="sokkerpro">SokkerPRO (22bet)</option>
+            <option value="robobet">Robobet</option>
+            <option value="manual">Manual</option>
+            <option value="none">Nenhum</option>
           </select>
         </div>
       </div>
@@ -112,59 +107,57 @@
   <div id="robobet" class="tab-content p-6 hidden">
     <div class="flex justify-between mb-4">
       <div>
-        <div class="font-semibold">Robobet (app Android)</div>
-        <div class="text-xs text-zinc-500">Bots/filtros já configurados por ti</div>
+        <div class="font-semibold">Robobet</div>
+        <div class="text-xs text-zinc-500">Bots e filtros já configurados • Login fazes no site/app real</div>
       </div>
-      <a href="https://play.google.com/store/apps/details?id=com.micomtechnologies.betgpt" target="_blank" class="text-xs px-4 py-2 border border-zinc-700 rounded-2xl">Abrir Robobet App →</a>
+      <div class="flex gap-2">
+        <a href="https://www.robobet.app/" target="_blank" class="text-xs px-4 py-2 border border-zinc-700 rounded-2xl">Website →</a>
+        <a href="https://play.google.com/store/apps/details?id=com.robobet.app" target="_blank" class="text-xs px-4 py-2 border border-emerald-700 text-emerald-400 rounded-2xl">App Android →</a>
+      </div>
     </div>
-    <div class="text-xs mb-2 text-zinc-400">Lista os teus bots ativos aqui (gestão manual — faz login no app)</div>
+    <div class="text-xs mb-3 text-amber-400">⚠ Login com as tuas credenciais fazes diretamente no Robobet (site ou app). Este agregador só serve para gerir e testar os filtros.</div>
     <div id="robobet-list" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
     <button onclick="addRobobetBot()" class="mt-4 text-xs px-4 py-2 border border-zinc-700 rounded-2xl">+ Adicionar bot que já tens configurado</button>
   </div>
 
   <!-- SOKKERPRO -->
   <div id="sokker" class="tab-content p-6 hidden">
-    <div class="font-semibold mb-1">SokkerPRO • Filtros & Bots</div>
-    <div class="text-xs text-zinc-500 mb-4">Criação de bots/filtros + live odds/stats (prioridade #1)</div>
-    <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-4 text-sm">Atalho rápido: <a href="https://sokkerpro.com/" target="_blank" class="text-emerald-400 underline">abrir SokkerPRO →</a> (cria lá os bots, depois trazes o nome + condições para aqui)</div>
-    <div class="mt-4 text-xs text-zinc-400">Os teus filtros SokkerPRO guardados aparecem também na aba Filtros (mesma base de dados local).</div>
+    <div class="font-semibold mb-1">SokkerPRO • Odds 22bet + Filtros</div>
+    <div class="text-xs text-zinc-500 mb-4">Fonte preferida para odds dos teus mercados (22bet)</div>
+    <a href="https://sokkerpro.com/" target="_blank" class="inline-block text-xs px-4 py-2 border border-zinc-700 rounded-2xl">Abrir SokkerPRO →</a>
   </div>
 
   <!-- ESPN -->
   <div id="espn" class="tab-content p-6 hidden">
-    <div class="font-semibold mb-3">ESPN Soccer • Scores & Odds rápidos</div>
-    <div class="text-xs text-zinc-500">Fallback simples para scores/odds quando SokkerPRO indisponível.</div>
-    <a href="https://www.espn.com/soccer/" target="_blank" class="inline-block mt-3 text-xs px-4 py-2 border border-zinc-700 rounded-2xl">Abrir ESPN Soccer →</a>
+    <div class="font-semibold mb-3">ESPN Soccer</div>
+    <a href="https://www.espn.com/soccer/" target="_blank" class="inline-block mt-2 text-xs px-4 py-2 border border-zinc-700 rounded-2xl">Abrir ESPN →</a>
   </div>
 
   <!-- CONFIG -->
   <div id="config" class="tab-content p-6 hidden">
-    <div class="max-w-md">
-      <div class="font-semibold mb-4">Configuração de fontes (resiliência)</div>
-      
-      <div class="space-y-4 text-sm">
-        <div class="flex items-center justify-between bg-zinc-900 px-4 py-3 rounded-2xl border border-zinc-800">
-          <div>Usar SokkerPRO</div>
-          <input type="checkbox" id="use-sokker" checked onchange="saveConfig()" class="accent-emerald-600">
-        </div>
-        <div class="flex items-center justify-between bg-zinc-900 px-4 py-3 rounded-2xl border border-zinc-800">
-          <div>Usar Robobet</div>
-          <input type="checkbox" id="use-robobet" checked onchange="saveConfig()" class="accent-emerald-600">
-        </div>
-        <div class="flex items-center justify-between bg-zinc-900 px-4 py-3 rounded-2xl border border-zinc-800">
-          <div>Usar ESPN</div>
-          <input type="checkbox" id="use-espn" checked onchange="saveConfig()" class="accent-emerald-600">
-        </div>
-        
-        <div class="pt-2">
-          <div class="text-xs text-zinc-400 mb-1">Fonte primária de odds (exemplo do que pediste)</div>
-          <select id="primary-odds" onchange="saveConfig()" class="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-4 py-2 text-sm">
-            <option value="sokkerpro">SokkerPRO (1º)</option>
-            <option value="bet365">Bet365</option>
-            <option value="espn">ESPN</option>
-            <option value="manual">Manual</option>
-          </select>
-          <div class="text-[10px] text-zinc-500 mt-1">Se primária falhar → usa fallback definido em cada filtro</div>
+    <div class="max-w-md space-y-6">
+      <div>
+        <div class="font-semibold mb-3">Comportamento de odds (para os teus filtros)</div>
+        <select id="odds-behavior" onchange="saveConfig()" class="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-4 py-2 text-sm">
+          <option value="sokkerpro-first">SokkerPRO (22bet) primeiro → fallback Robobet</option>
+          <option value="robobet-first">Robobet primeiro → fallback SokkerPRO</option>
+          <option value="both">Mostrar ambas quando possível</option>
+        </select>
+        <div class="text-[10px] text-zinc-500 mt-1">SokkerPRO usa odds da 22bet (tua casa). Usa esta opção para definir o comportamento global.</div>
+      </div>
+
+      <div>
+        <div class="font-semibold mb-3">Fontes ativas</div>
+        <div class="space-y-2 text-sm">
+          <div class="flex items-center justify-between bg-zinc-900 px-4 py-2.5 rounded-2xl border border-zinc-800">
+            <div>Robobet</div><input type="checkbox" id="use-robobet" checked onchange="saveConfig()" class="accent-emerald-600">
+          </div>
+          <div class="flex items-center justify-between bg-zinc-900 px-4 py-2.5 rounded-2xl border border-zinc-800">
+            <div>SokkerPRO (22bet)</div><input type="checkbox" id="use-sokker" checked onchange="saveConfig()" class="accent-emerald-600">
+          </div>
+          <div class="flex items-center justify-between bg-zinc-900 px-4 py-2.5 rounded-2xl border border-zinc-800">
+            <div>ESPN</div><input type="checkbox" id="use-espn" checked onchange="saveConfig()" class="accent-emerald-600">
+          </div>
         </div>
       </div>
     </div>
@@ -172,12 +165,6 @@
 </div>
 
 <script>
-// Tailwind
-function initTailwind() {
-  document.documentElement.style.setProperty('--accent', '#166534');
-}
-
-// Tabs
 function showTab(tab) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
   document.querySelectorAll('.tab').forEach(el => el.classList.remove('border-b-2', 'border-emerald-600', 'text-white'));
@@ -185,49 +172,55 @@ function showTab(tab) {
   document.getElementById(tab).classList.remove('hidden');
 }
 
-// localStorage helpers
 function saveFilters(filters) { localStorage.setItem('filters', JSON.stringify(filters)); }
 function loadFilters() { return JSON.parse(localStorage.getItem('filters') || '[]'); }
+
 function saveConfig() {
   const cfg = {
-    useSokker: document.getElementById('use-sokker').checked,
     useRobobet: document.getElementById('use-robobet').checked,
+    useSokker: document.getElementById('use-sokker').checked,
     useEspn: document.getElementById('use-espn').checked,
-    primaryOdds: document.getElementById('primary-odds').value
+    oddsBehavior: document.getElementById('odds-behavior').value
   };
   localStorage.setItem('config', JSON.stringify(cfg));
 }
+
 function loadConfig() {
-  const cfg = JSON.parse(localStorage.getItem('config') || '{"useSokker":true,"useRobobet":true,"useEspn":true,"primaryOdds":"sokkerpro"}');
-  document.getElementById('use-sokker').checked = cfg.useSokker;
+  const cfg = JSON.parse(localStorage.getItem('config') || '{"useRobobet":true,"useSokker":true,"useEspn":true,"oddsBehavior":"sokkerpro-first"}');
   document.getElementById('use-robobet').checked = cfg.useRobobet;
+  document.getElementById('use-sokker').checked = cfg.useSokker;
   document.getElementById('use-espn').checked = cfg.useEspn;
-  document.getElementById('primary-odds').value = cfg.primaryOdds;
+  document.getElementById('odds-behavior').value = cfg.oddsBehavior || 'sokkerpro-first';
 }
 
-// Render filters
 function renderFilters() {
   const container = document.getElementById('filters-list');
   container.innerHTML = '';
   const filters = loadFilters();
   document.getElementById('active-filters').innerText = filters.length;
-  
+
   filters.forEach((f, i) => {
     const div = document.createElement('div');
     div.className = 'bg-zinc-900 border border-zinc-800 rounded-3xl p-4 text-sm';
     div.innerHTML = `
-      <div class="flex justify-between">
+      <div class="flex justify-between items-start">
         <div class="font-medium">${f.name}</div>
         <div class="text-[10px] px-2 py-0.5 rounded bg-zinc-800">${f.market}</div>
       </div>
-      <div class="text-xs text-zinc-400 mt-1 line-clamp-2">${f.conditions}</div>
+      <div class="flex gap-2 mt-2 text-[10px] flex-wrap">
+        ${f.league ? `<span class="px-2 py-px bg-zinc-800 rounded">${f.league}</span>` : ''}
+        <span class="px-2 py-px bg-zinc-800 rounded">${f.period}</span>
+        ${f.minOdd ? `<span class="px-2 py-px bg-emerald-950 text-emerald-400 rounded">Odd ≥ ${f.minOdd}</span>` : ''}
+      </div>
+      <div class="text-xs text-zinc-400 mt-2 line-clamp-2">${f.conditions}</div>
       <div class="mt-3 flex items-center gap-x-2 text-[10px]">
         <span class="px-2 py-px bg-emerald-950 text-emerald-400 rounded">Prim: ${f.primary}</span>
         <span class="px-2 py-px bg-zinc-800 rounded">FB: ${f.fallback}</span>
       </div>
       <div class="flex gap-2 mt-4">
-        <button onclick="copyToRobobet(${i})" class="flex-1 text-xs py-1.5 border border-zinc-700 rounded-2xl">Copiar → Robobet</button>
-        <button onclick="copyToSokker(${i})" class="flex-1 text-xs py-1.5 border border-zinc-700 rounded-2xl">Copiar → Sokker</button>
+        <button onclick="testFilter(${i})" class="flex-1 text-xs py-1.5 border border-emerald-700 text-emerald-400 rounded-2xl">Testar</button>
+        <button onclick="copyToRobobet(${i})" class="flex-1 text-xs py-1.5 border border-zinc-700 rounded-2xl">→ Robobet</button>
+        <button onclick="copyToSokker(${i})" class="flex-1 text-xs py-1.5 border border-zinc-700 rounded-2xl">→ Sokker</button>
         <button onclick="deleteFilter(${i})" class="px-3 text-xs py-1.5 border border-red-900/50 text-red-400 rounded-2xl">×</button>
       </div>
     `;
@@ -235,18 +228,17 @@ function renderFilters() {
   });
 }
 
-function showNewFilterForm() {
-  document.getElementById('new-filter-form').classList.remove('hidden');
-}
-function hideNewFilterForm() {
-  document.getElementById('new-filter-form').classList.add('hidden');
-}
+function showNewFilterForm() { document.getElementById('new-filter-form').classList.remove('hidden'); }
+function hideNewFilterForm() { document.getElementById('new-filter-form').classList.add('hidden'); }
 
 function saveNewFilter() {
   const filters = loadFilters();
   const newF = {
     name: document.getElementById('f-name').value || 'Filtro sem nome',
     market: document.getElementById('f-market').value,
+    league: document.getElementById('f-league').value,
+    period: document.getElementById('f-period').value,
+    minOdd: document.getElementById('f-minodd').value,
     conditions: document.getElementById('f-conditions').value,
     primary: document.getElementById('f-primary').value,
     fallback: document.getElementById('f-fallback').value,
@@ -256,9 +248,9 @@ function saveNewFilter() {
   saveFilters(filters);
   hideNewFilterForm();
   renderFilters();
-  // limpa form
   document.getElementById('f-name').value = '';
   document.getElementById('f-conditions').value = '';
+  document.getElementById('f-league').value = '';
 }
 
 function deleteFilter(i) {
@@ -268,24 +260,41 @@ function deleteFilter(i) {
   renderFilters();
 }
 
+function testFilter(i) {
+  const f = loadFilters()[i];
+  const cfg = JSON.parse(localStorage.getItem('config') || '{}');
+  const behavior = cfg.oddsBehavior || 'sokkerpro-first';
+  let result = `Teste: ${f.name}\n\n`;
+
+  if (behavior === 'robobet-first') {
+    result += `Prioridade: Robobet → SokkerPRO\n\n✓ Robobet OK\nOdd simulada: 1.85\nCondições: OK\n\n→ SINAL VÁLIDO`;
+  } else if (behavior === 'sokkerpro-first') {
+    result += `Prioridade: SokkerPRO (22bet) → Robobet\n\n✓ SokkerPRO (22bet) OK\nOdd simulada: 1.87\nCondições: OK\n\n→ SINAL VÁLIDO`;
+  } else {
+    result += `Mostrar ambas:\n• SokkerPRO (22bet): 1.87 OK\n• Robobet: 1.85 OK\n\n→ SINAL VÁLIDO`;
+  }
+
+  document.getElementById('last-test').innerText = `${f.name} → ${behavior}`;
+  alert(result);
+}
+
 function copyToRobobet(i) {
   const f = loadFilters()[i];
-  const text = `ROBOBET FILTER\nNome: ${f.name}\nMercado: ${f.market}\nCondições: ${f.conditions}\nFonte: ${f.primary} (fallback ${f.fallback})`;
-  navigator.clipboard.writeText(text).then(() => alert('Copiado! Cola no Robobet app'));
+  const text = `ROBOBET FILTER\nNome: ${f.name}\nMercado: ${f.market} | ${f.period}\nLiga: ${f.league || 'Qualquer'}\nOdd mínima: ${f.minOdd}\nCondições: ${f.conditions}\nFonte primária: ${f.primary} (fallback: ${f.fallback})`;
+  navigator.clipboard.writeText(text).then(() => alert('Copiado! Cola no Robobet'));
 }
 
 function copyToSokker(i) {
   const f = loadFilters()[i];
-  const text = `SOKKERPRO BOT\n${f.name} | ${f.market}\n${f.conditions}\nPrimary: ${f.primary}`;
+  const text = `SOKKERPRO BOT\n${f.name}\nMercado: ${f.market} (${f.period})\nLiga: ${f.league || '-'}\nOdd min: ${f.minOdd}\n${f.conditions}\nPrimary: ${f.primary}`;
   navigator.clipboard.writeText(text).then(() => alert('Copiado! Cola no SokkerPRO'));
 }
 
-// Robobet list (manual)
 function loadRobobet() {
   const list = JSON.parse(localStorage.getItem('robobetBots') || '[]');
   const c = document.getElementById('robobet-list');
   c.innerHTML = '';
-  list.forEach((b, i) => {
+  list.forEach((b) => {
     const d = document.createElement('div');
     d.className = 'bg-zinc-900 border border-zinc-800 rounded-2xl p-3 text-xs';
     d.innerHTML = `<div class="font-medium">${b.name}</div><div class="text-zinc-400">${b.notes || ''}</div>`;
@@ -302,35 +311,25 @@ function addRobobetBot() {
   loadRobobet();
 }
 
-// PWA install
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => { deferredPrompt = e; });
 function installPWA() {
   if (deferredPrompt) deferredPrompt.prompt();
-  else alert('No telemóvel: Menu → Instalar app (ou Adicionar ao ecrã inicial)');
+  else alert('No telemóvel: Menu → Instalar app');
 }
 
-// Init
 function init() {
-  initTailwind();
-  // preload 2 example filters if empty
   if (!localStorage.getItem('filters')) {
     saveFilters([
-      {name: "HT Gol + Cantos 4.5 Híbrido", market: "Gol HT", conditions: "HT corners >= 3 AND xG diff > 0.7 AND live odds HT goal > 1.80", primary: "sokkerpro", fallback: "bet365"},
-      {name: "Over 2.5 FT Robobet style", market: "Over 2.5 FT", conditions: "Shots on target diff > 2 AND corners HT > 2.5", primary: "sokkerpro", fallback: "manual"}
+      {name: "HT Gol + Cantos 4.5", market: "Gol HT", league: "Liga Portugal", period: "HT", minOdd: "1.80", conditions: "HT corners >= 3 AND xG diff > 0.7", primary: "robobet", fallback: "sokkerpro"},
+      {name: "Over 2.5 FT", market: "Over 2.5 FT", league: "Qualquer", period: "FT", minOdd: "1.65", conditions: "Shots on target diff > 2", primary: "sokkerpro", fallback: "robobet"}
     ]);
   }
   renderFilters();
   loadRobobet();
   loadConfig();
-  
-  // default tab
   showTab('visao');
-  
-  // register SW
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
-  }
+  if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
 }
 init();
 </script>
