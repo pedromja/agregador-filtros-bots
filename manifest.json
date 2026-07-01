@@ -1,0 +1,9 @@
+{
+  "name": "Agregador Filtros & Bots",
+  "short_name": "Agregador",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#166534",
+  "icons": [{"src": "https://via.placeholder.com/192x192/166534/ffffff?text=AB", "sizes": "192x192", "type": "image/png"}]
+}
