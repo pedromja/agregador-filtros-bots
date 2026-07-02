@@ -33,9 +33,14 @@
                     <p class="text-emerald-400 text-xs -mt-1">Filtros &amp; Bots • v1.1</p>
                 </div>
             </div>
-            <button onclick="showConfigModal()" class="flex items-center gap-x-2 px-4 py-2 text-sm bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-3xl">
-                <i class="fa-solid fa-cog"></i> <span class="hidden md:inline">Config</span>
-            </button>
+            <div class="flex items-center gap-x-2">
+                <button onclick="alternarModoDemonstracao()" id="btn-demo" class="flex items-center gap-x-2 px-4 py-2 text-sm bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-3xl">
+                    <i class="fa-solid fa-masks-theater"></i> <span id="btn-demo-texto" class="hidden md:inline">Modo Demonstração: Off</span>
+                </button>
+                <button onclick="showConfigModal()" class="flex items-center gap-x-2 px-4 py-2 text-sm bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-3xl">
+                    <i class="fa-solid fa-cog"></i> <span class="hidden md:inline">Config</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -130,7 +135,8 @@
                     <p class="text-slate-400 text-sm">Todos os jogos encontrados • Destaque automático</p>
                 </div>
                 <div class="flex items-center gap-x-3">
-                    <span id="robobet-ext-status" class="text-xs text-slate-500">⚪ Extensão RoboBet não detetada</span>
+                    <span id="robobet-ext-status" class="text-xs text-slate-500">⚪ RoboBet não detetado</span>
+                    <span id="sokkerpro-ext-status" class="text-xs text-slate-500">⚪ SokkerPro não detetado</span>
                     <button onclick="atualizarJogosAoVivo(true)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-3xl text-sm">
                         <i class="fa-solid fa-sync-alt mr-2"></i> Atualizar agora
                     </button>
@@ -153,12 +159,44 @@
         let filtros = [];
         let jogosLiveScore = [];
         let jogosRoboBet = [];
+        let jogosSokkerPro = [];
         let jogosCarregados = false;
+
+        // ---- Modo Demonstração: esconde de que fontes vêm os dados, para mostrares o projeto sem revelar isso ----
+        const NOMES_DEMO = { RoboBet: 'Fonte Alfa', SokkerPro: 'Fonte Beta', LiveScore: 'Fonte Gama' };
+
+        function modoDemonstracaoAtivo() {
+            return localStorage.getItem('modo_demonstracao') === 'on';
+        }
+
+        function nomeFonteExibicao(fonte) {
+            return modoDemonstracaoAtivo() ? (NOMES_DEMO[fonte] || fonte) : fonte;
+        }
+
+        function alternarModoDemonstracao() {
+            const ativo = modoDemonstracaoAtivo();
+            localStorage.setItem('modo_demonstracao', ativo ? 'off' : 'on');
+            atualizarBotaoDemo();
+            renderJogosAoVivo();
+            renderFiltros();
+        }
+
+        function atualizarBotaoDemo() {
+            const texto = document.getElementById('btn-demo-texto');
+            const btn = document.getElementById('btn-demo');
+            if (!texto || !btn) return;
+            const ativo = modoDemonstracaoAtivo();
+            texto.textContent = 'Modo Demonstração: ' + (ativo ? 'On' : 'Off');
+            btn.classList.toggle('border-yellow-500', ativo);
+            btn.classList.toggle('text-yellow-400', ativo);
+        }
 
         function init() {
             carregarFiltros();
             renderFiltros();
             lerCacheRoboBet();
+            lerCacheSokkerPro();
+            atualizarBotaoDemo();
             switchTab('filtros');
         }
 
@@ -263,13 +301,78 @@
         // Atualiza-se sozinho sempre que a extensão trouxer dados novos do RoboBet.
         window.addEventListener('robobet-dados-atualizados', lerCacheRoboBet);
 
-        function estadoExtensaoRoboBet() {
-            const raw = localStorage.getItem('robobet_inplay_cache');
+        function mapearFixtureSokkerPro(fx) {
+            let minuto;
+            if (fx.status === '1st' || fx.status === '2nd') minuto = (fx.minute || '0') + "'";
+            else if (fx.status === 'HT') minuto = 'Intervalo';
+            else if (fx.status === 'FT') minuto = 'Terminado';
+            else minuto = fx.status || '';
+
+            let prog = null;
+            try { prog = fx.prognosticos ? JSON.parse(fx.prognosticos) : null; } catch (e) { /* ignora */ }
+
+            const cantosCasa = parseFloat(fx.localCorners);
+            const cantosFora = parseFloat(fx.visitorCorners);
+            const posseCasa = parseFloat(fx.localBallPossession);
+            const posseFora = parseFloat(fx.visitorBallPossession);
+            const dapmCasa = parseFloat(fx.localDapmTotal);
+            const dapmFora = parseFloat(fx.visitorDapmTotal);
+
+            return {
+                id: 'sp-' + fx.fixtureId,
+                casa: fx.localTeamName || '?',
+                fora: fx.visitorTeamName || '?',
+                golosCasa: fx.scoresLocalTeam ?? '-',
+                golosFora: fx.scoresVisitorTeam ?? '-',
+                minuto: minuto,
+                competicao: (fx.countryName ? fx.countryName + ' · ' : '') + (fx.leagueName || ''),
+                fonte: 'SokkerPro',
+                stats: {
+                    corners: { home: cantosCasa || 0, away: cantosFora || 0, total: (cantosCasa || 0) + (cantosFora || 0) },
+                    possession: { home: isNaN(posseCasa) ? null : posseCasa, away: isNaN(posseFora) ? null : posseFora },
+                    appm_total: { total: (isNaN(dapmCasa) ? 0 : dapmCasa) + (isNaN(dapmFora) ? 0 : dapmFora) }
+                },
+                superiority: {
+                    home: parseFloat(fx.localPressureBar) || null,
+                    away: parseFloat(fx.visitorPressureBar) || null
+                },
+                golosHT: fx.scoresHT !== undefined ? parseFloat(fx.scoresHT) : null,
+                probOver25: prog && prog.mercado_gols && prog.mercado_gols.over_2_5 ? prog.mercado_gols.over_2_5.res : null,
+                probBTTS: prog && prog.mercado_ambos_marcam && prog.mercado_ambos_marcam.ambos_sim ? prog.mercado_ambos_marcam.ambos_sim.probabilidade : null
+            };
+        }
+
+        // Lê os dados que a extensão guardou no localStorage a partir da tua sessão
+        // aberta do SokkerPro. Sem extensão ou sem essa aba aberta, não encontra nada.
+        function lerCacheSokkerPro() {
+            const raw = localStorage.getItem('sokkerpro_inplay_cache');
+            if (!raw) return;
+
+            try {
+                const cache = JSON.parse(raw);
+                const resposta = cache.data || {};
+                const categorias = (resposta.data && resposta.data.sortedCategorizedFixtures) || [];
+                const jogos = [];
+                categorias.forEach(categoria => {
+                    (categoria.fixtures || []).forEach(fx => jogos.push(mapearFixtureSokkerPro(fx)));
+                });
+                jogosSokkerPro = jogos;
+                jogosCarregados = true;
+                renderJogosAoVivo();
+            } catch (err) {
+                console.error('Erro a ler cache do SokkerPro:', err);
+            }
+        }
+
+        window.addEventListener('sokkerpro-dados-atualizados', lerCacheSokkerPro);
+
+        function estadoExtensao(chaveCache) {
+            const raw = localStorage.getItem(chaveCache);
             if (!raw) return null;
             try {
                 const cache = JSON.parse(raw);
                 const segundos = (Date.now() - cache.ts) / 1000;
-                return segundos < 120; // considera "ligada" se houve dados nos últimos 2 minutos
+                return segundos < 120;
             } catch (e) {
                 return null;
             }
@@ -348,14 +451,21 @@
             const container = document.getElementById('jogos-container');
             container.innerHTML = '';
 
-            const todos = [...jogosLiveScore, ...jogosRoboBet];
+            const todos = [...jogosLiveScore, ...jogosRoboBet, ...jogosSokkerPro];
 
-            const statusExt = document.getElementById('robobet-ext-status');
-            if (statusExt) {
-                const ligada = estadoExtensaoRoboBet();
-                statusExt.textContent = ligada
-                    ? '🟢 Extensão RoboBet ligada'
-                    : (ligada === false ? '🟡 Extensão RoboBet sem dados recentes' : '⚪ Extensão RoboBet não detetada');
+            const statusRB = document.getElementById('robobet-ext-status');
+            if (statusRB) {
+                const ligada = estadoExtensao('robobet_inplay_cache');
+                statusRB.textContent = ligada
+                    ? '🟢 RoboBet'
+                    : (ligada === false ? '🟡 RoboBet (sem dados recentes)' : '⚪ RoboBet não detetado');
+            }
+            const statusSP = document.getElementById('sokkerpro-ext-status');
+            if (statusSP) {
+                const ligada = estadoExtensao('sokkerpro_inplay_cache');
+                statusSP.textContent = ligada
+                    ? '🟢 SokkerPro'
+                    : (ligada === false ? '🟡 SokkerPro (sem dados recentes)' : '⚪ SokkerPro não detetado');
             }
 
             if (todos.length === 0) {
@@ -366,9 +476,9 @@
             }
 
             todos.forEach(j => {
-                const badge = j.fonte === 'RoboBet'
-                    ? '<span class="text-xs px-2 py-0.5 bg-purple-600 rounded-full">RoboBet</span>'
-                    : '<span class="text-xs px-2 py-0.5 bg-slate-700 rounded-full">LiveScore</span>';
+                const nomeFonte = nomeFonteExibicao(j.fonte);
+                const corBadge = { RoboBet: 'bg-purple-600', SokkerPro: 'bg-blue-600', LiveScore: 'bg-slate-700' }[j.fonte] || 'bg-slate-700';
+                const badge = `<span class="text-xs px-2 py-0.5 ${corBadge} rounded-full">${nomeFonte}</span>`;
 
                 const statsExtra = (j.stats && j.stats.corners)
                     ? `<div class="text-xs text-slate-400 mt-2">Cantos: ${j.stats.corners.home}-${j.stats.corners.away} · Posse: ${j.stats.possession.home}%-${j.stats.possession.away}%</div>`
@@ -404,16 +514,19 @@
             { valor: 'totalGolos', label: 'Total de golos' },
             { valor: 'golosCasa', label: 'Golos da casa' },
             { valor: 'golosFora', label: 'Golos de fora' },
-            { valor: 'cantosTotal', label: 'Total de cantos (só RoboBet)' },
-            { valor: 'cantosCasa', label: 'Cantos casa (só RoboBet)' },
-            { valor: 'cantosFora', label: 'Cantos fora (só RoboBet)' },
-            { valor: 'posseCasa', label: 'Posse de bola casa % (só RoboBet)' },
-            { valor: 'posseFora', label: 'Posse de bola fora % (só RoboBet)' },
+            { valor: 'golosHT', label: 'Golos ao intervalo (só SokkerPro)' },
+            { valor: 'cantosTotal', label: 'Total de cantos' },
+            { valor: 'cantosCasa', label: 'Cantos casa' },
+            { valor: 'cantosFora', label: 'Cantos fora' },
+            { valor: 'posseCasa', label: 'Posse de bola casa %' },
+            { valor: 'posseFora', label: 'Posse de bola fora %' },
             { valor: 'xcCasa', label: 'xC casa (só RoboBet)' },
             { valor: 'xcFora', label: 'xC fora (só RoboBet)' },
-            { valor: 'appmTotal', label: 'Ataques perigosos/min total (só RoboBet)' },
-            { valor: 'superioridadeCasa', label: 'Superioridade casa % (só RoboBet)' },
-            { valor: 'superioridadeFora', label: 'Superioridade fora % (só RoboBet)' }
+            { valor: 'appmTotal', label: 'Ataques perigosos/min total' },
+            { valor: 'superioridadeCasa', label: 'Superioridade/pressão casa %' },
+            { valor: 'superioridadeFora', label: 'Superioridade/pressão fora %' },
+            { valor: 'probOver25', label: 'Probabilidade Over 2.5 % (só SokkerPro)' },
+            { valor: 'probBTTS', label: 'Probabilidade Ambas Marcam % (só SokkerPro)' }
         ];
         const OPERADORES = [['>', 'maior que'], ['>=', 'maior ou igual a'], ['<', 'menor que'], ['<=', 'menor ou igual a'], ['==', 'igual a']];
 
@@ -495,6 +608,9 @@
                 m.superioridadeCasa = j.superiority.home;
                 m.superioridadeFora = j.superiority.away;
             }
+            if (j.golosHT !== undefined && j.golosHT !== null) m.golosHT = j.golosHT;
+            if (j.probOver25 !== undefined && j.probOver25 !== null) m.probOver25 = j.probOver25;
+            if (j.probBTTS !== undefined && j.probBTTS !== null) m.probBTTS = j.probBTTS;
             return m;
         }
 
@@ -533,7 +649,7 @@
                 card.innerHTML = `
                     <div class="flex justify-between items-center">
                         <div>
-                            <div class="font-semibold">${j.casa} vs ${j.fora} <span class="text-xs text-slate-500">(${j.fonte})</span></div>
+                            <div class="font-semibold">${j.casa} vs ${j.fora} <span class="text-xs text-slate-500">(${nomeFonteExibicao(j.fonte)})</span></div>
                             <div class="text-xs text-slate-400">${j.golosCasa}-${j.golosFora} · ${j.minuto}</div>
                         </div>
                         <div class="text-xs text-yellow-400 text-right">${coincidencias.map(f => f.nome).join(', ')}</div>
