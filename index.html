@@ -125,6 +125,7 @@
     <script>
         let filtros = [];
         let jogosAoVivo = [];
+        let jogosCarregados = false;
 
         function init() {
             carregarFiltros();
@@ -187,19 +188,27 @@
             navigator.clipboard.writeText(JSON.stringify(filtros[i], null, 2)).then(() => alert('JSON copiado!'));
         }
 
-        // Chave grátis em https://dashboard.api-football.com (~100 pedidos/dia).
+        // Chave grátis em https://rapidapi.com/apidojo/api/livescore6 (plano Basic, 500 pedidos/mês).
         // Guardada só neste browser via localStorage - configura em "Config".
-        const API_FOOTBALL_URL = 'https://v3.football.api-sports.io/fixtures?live=all';
+        const LIVESCORE_URL = 'https://livescore6.p.rapidapi.com/matches/v2/list-live?Category=soccer&Timezone=0';
+        const LIVESCORE_HOST = 'livescore6.p.rapidapi.com';
+
+        function formatMinuto(eps) {
+            if (!eps) return '';
+            if (/^\d+(\+\d+)?$/.test(eps)) return eps + "'"; // ex: "45" ou "45+2"
+            const mapa = { 'HT': 'Intervalo', 'NS': 'Por começar', 'FT': 'Terminado', 'Postp.': 'Adiado' };
+            return mapa[eps] || eps;
+        }
 
         async function atualizarJogosAoVivo() {
             const container = document.getElementById('jogos-container');
-            const apiKey = localStorage.getItem('apifootball_key');
+            const apiKey = localStorage.getItem('livescore_key');
 
             if (!apiKey) {
                 container.innerHTML = `
                     <div class="col-span-full text-center py-10 text-slate-400">
                         <i class="fa-solid fa-key text-2xl mb-3 block"></i>
-                        Ainda não configuraste a tua chave da API-Football.
+                        Ainda não configuraste a tua chave da LiveScore (RapidAPI).
                         <div class="mt-4">
                             <button onclick="showConfigModal()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-3xl text-sm text-white font-medium">Configurar chave</button>
                         </div>
@@ -210,37 +219,44 @@
             container.innerHTML = '<div class="col-span-full text-center py-8"><i class="fa-solid fa-spinner fa-spin mr-2"></i>A carregar todos os jogos ao vivo...</div>';
 
             try {
-                const res = await fetch(API_FOOTBALL_URL, {
-                    headers: { 'x-apisports-key': apiKey }
+                const res = await fetch(LIVESCORE_URL, {
+                    headers: {
+                        'x-rapidapi-key': apiKey,
+                        'x-rapidapi-host': LIVESCORE_HOST
+                    }
                 });
 
-                if (!res.ok) throw new Error('HTTP ' + res.status + ' - verifica a chave ou o limite diário');
+                if (!res.ok) throw new Error('HTTP ' + res.status + ' - verifica a chave ou o limite mensal');
 
                 const data = await res.json();
+                const jogos = [];
 
-                if (data.errors && Object.keys(data.errors).length > 0) {
-                    throw new Error(Object.values(data.errors).join(' | '));
-                }
+                (data.Stages || []).forEach(stage => {
+                    (stage.Events || []).forEach(e => {
+                        const t1 = (e.T1 && e.T1[0]) || {};
+                        const t2 = (e.T2 && e.T2[0]) || {};
+                        jogos.push({
+                            id: e.Eid,
+                            casa: t1.Nm || '?',
+                            fora: t2.Nm || '?',
+                            golosCasa: e.Tr1 ?? '-',
+                            golosFora: e.Tr2 ?? '-',
+                            minuto: formatMinuto(e.Eps),
+                            competicao: stage.Cnm + (stage.Snm ? ' · ' + stage.Snm : '')
+                        });
+                    });
+                });
 
-                jogosAoVivo = (data.response || []).map(f => ({
-                    id: f.fixture.id,
-                    casa: f.teams.home.name,
-                    fora: f.teams.away.name,
-                    golosCasa: f.goals.home ?? 0,
-                    golosFora: f.goals.away ?? 0,
-                    minuto: f.fixture.status.elapsed ? f.fixture.status.elapsed + "'" : f.fixture.status.short,
-                    competicao: f.league.name,
-                    fonte: 'API-Football'
-                }));
-
+                jogosAoVivo = jogos;
+                jogosCarregados = true;
                 renderJogosAoVivo();
             } catch (err) {
                 console.error('Erro a atualizar jogos ao vivo:', err);
                 container.innerHTML = `
                     <div class="col-span-full text-center py-10 text-red-400">
                         <i class="fa-solid fa-triangle-exclamation text-2xl mb-3 block"></i>
-                        Erro ao ligar à API-Football: ${err.message}
-                        <div class="text-slate-400 text-sm mt-2">Verifica a chave em Config, ou se atingiste o limite diário (100 pedidos/dia no plano grátis).</div>
+                        Erro ao ligar à LiveScore: ${err.message}
+                        <div class="text-slate-400 text-sm mt-2">Verifica a chave em Config, ou se atingiste o limite mensal (500 pedidos/mês no plano grátis).</div>
                     </div>`;
             }
         }
@@ -250,7 +266,9 @@
             container.innerHTML = '';
 
             if (jogosAoVivo.length === 0) {
-                container.innerHTML = '<div class="col-span-full text-center py-10 text-slate-400">Sem jogos ao vivo neste momento.</div>';
+                container.innerHTML = jogosCarregados
+                    ? '<div class="col-span-full text-center py-10 text-slate-400">Sem jogos ao vivo neste momento.</div>'
+                    : '<div class="col-span-full text-center py-10 text-slate-400">Clica em "Atualizar agora" para carregar os jogos ao vivo.</div>';
                 return;
             }
 
@@ -272,15 +290,15 @@
         }
 
         function showConfigModal() {
-            const key = localStorage.getItem('apifootball_key') || '';
+            const key = localStorage.getItem('livescore_key') || '';
             const modal = document.createElement('div');
             modal.id = 'config-modal';
             modal.className = 'fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4';
             modal.innerHTML = `
                 <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-md w-full">
                     <h3 class="text-lg font-semibold mb-2">Configuração</h3>
-                    <p class="text-slate-400 text-sm mb-4">Cola aqui a tua chave grátis da API-Football (<a href="https://dashboard.api-football.com" target="_blank" class="text-emerald-400 underline">dashboard.api-football.com</a>). Fica guardada só neste browser.</p>
-                    <input id="config-api-key" type="text" value="${key}" placeholder="Chave da API-Football"
+                    <p class="text-slate-400 text-sm mb-4">Cola aqui a tua X-RapidAPI-Key, depois de subscreveres o plano grátis da LiveScore em <a href="https://rapidapi.com/apidojo/api/livescore6" target="_blank" class="text-emerald-400 underline">rapidapi.com/apidojo/api/livescore6</a>. Fica guardada só neste browser.</p>
+                    <input id="config-api-key" type="text" value="${key}" placeholder="X-RapidAPI-Key"
                         class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-3 text-sm font-mono mb-4">
                     <div class="flex gap-x-2">
                         <button onclick="guardarConfig()" class="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 rounded-3xl font-semibold text-sm">Guardar</button>
@@ -297,7 +315,7 @@
 
         function guardarConfig() {
             const key = document.getElementById('config-api-key').value.trim();
-            localStorage.setItem('apifootball_key', key);
+            localStorage.setItem('livescore_key', key);
             fecharConfigModal();
             atualizarJogosAoVivo();
         }
@@ -310,7 +328,7 @@
             document.querySelectorAll('[id^="content-"]').forEach(el => el.classList.add('hidden'));
             document.getElementById('content-' + tab).classList.remove('hidden');
             if (tab === 'filtros') renderFiltros();
-            if (tab === 'jogos') atualizarJogosAoVivo();
+            if (tab === 'jogos') renderJogosAoVivo(); // não chama a API sozinho - só mostra o que já estava carregado
         }
 
         window.onload = init;
