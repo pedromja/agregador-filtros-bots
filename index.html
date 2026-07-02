@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt">
 <head>
@@ -186,34 +187,119 @@
             navigator.clipboard.writeText(JSON.stringify(filtros[i], null, 2)).then(() => alert('JSON copiado!'));
         }
 
+        // Chave grátis em https://dashboard.api-football.com (~100 pedidos/dia).
+        // Guardada só neste browser via localStorage - configura em "Config".
+        const API_FOOTBALL_URL = 'https://v3.football.api-sports.io/fixtures?live=all';
+
         async function atualizarJogosAoVivo() {
             const container = document.getElementById('jogos-container');
-            container.innerHTML = '<div class="col-span-full text-center py-8">A carregar todos os jogos ao vivo...</div>';
-            
-            jogosAoVivo = [
-                {id:1, casa:"Benfica", fora:"Porto", placar:"1-0", minuto:"67'", competicao:"Liga Portugal", fonte:"football-data.org"},
-                {id:2, casa:"Real Madrid", fora:"Barcelona", placar:"2-1", minuto:"45'", competicao:"La Liga", fonte:"football-data.org"},
-            ];
-            renderJogosAoVivo();
+            const apiKey = localStorage.getItem('apifootball_key');
+
+            if (!apiKey) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-10 text-slate-400">
+                        <i class="fa-solid fa-key text-2xl mb-3 block"></i>
+                        Ainda não configuraste a tua chave da API-Football.
+                        <div class="mt-4">
+                            <button onclick="showConfigModal()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-3xl text-sm text-white font-medium">Configurar chave</button>
+                        </div>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = '<div class="col-span-full text-center py-8"><i class="fa-solid fa-spinner fa-spin mr-2"></i>A carregar todos os jogos ao vivo...</div>';
+
+            try {
+                const res = await fetch(API_FOOTBALL_URL, {
+                    headers: { 'x-apisports-key': apiKey }
+                });
+
+                if (!res.ok) throw new Error('HTTP ' + res.status + ' - verifica a chave ou o limite diário');
+
+                const data = await res.json();
+
+                if (data.errors && Object.keys(data.errors).length > 0) {
+                    throw new Error(Object.values(data.errors).join(' | '));
+                }
+
+                jogosAoVivo = (data.response || []).map(f => ({
+                    id: f.fixture.id,
+                    casa: f.teams.home.name,
+                    fora: f.teams.away.name,
+                    golosCasa: f.goals.home ?? 0,
+                    golosFora: f.goals.away ?? 0,
+                    minuto: f.fixture.status.elapsed ? f.fixture.status.elapsed + "'" : f.fixture.status.short,
+                    competicao: f.league.name,
+                    fonte: 'API-Football'
+                }));
+
+                renderJogosAoVivo();
+            } catch (err) {
+                console.error('Erro a atualizar jogos ao vivo:', err);
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-10 text-red-400">
+                        <i class="fa-solid fa-triangle-exclamation text-2xl mb-3 block"></i>
+                        Erro ao ligar à API-Football: ${err.message}
+                        <div class="text-slate-400 text-sm mt-2">Verifica a chave em Config, ou se atingiste o limite diário (100 pedidos/dia no plano grátis).</div>
+                    </div>`;
+            }
         }
 
         function renderJogosAoVivo() {
             const container = document.getElementById('jogos-container');
             container.innerHTML = '';
+
+            if (jogosAoVivo.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-center py-10 text-slate-400">Sem jogos ao vivo neste momento.</div>';
+                return;
+            }
+
             jogosAoVivo.forEach(j => {
                 const card = document.createElement('div');
                 card.className = `game-card bg-slate-900 border border-slate-700 rounded-3xl p-5`;
                 card.innerHTML = `
                     <div class="flex justify-between">
                         <div>
+                            <div class="text-xs text-slate-500 mb-1">${j.competicao}</div>
                             <div class="font-semibold">${j.casa} vs ${j.fora}</div>
-                            <div class="text-emerald-400 text-xl">${j.placar} <span class="text-xs">${j.minuto}</span></div>
+                            <div class="text-emerald-400 text-xl">${j.golosCasa} - ${j.golosFora} <span class="text-xs">${j.minuto}</span></div>
                         </div>
                     </div>
                     <button onclick="adicionarJogoParaAlertas(${j.id})" class="mt-4 w-full py-2 bg-purple-600 hover:bg-purple-700 rounded-2xl text-sm">Adicionar a Alertas</button>
                 `;
                 container.appendChild(card);
             });
+        }
+
+        function showConfigModal() {
+            const key = localStorage.getItem('apifootball_key') || '';
+            const modal = document.createElement('div');
+            modal.id = 'config-modal';
+            modal.className = 'fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4';
+            modal.innerHTML = `
+                <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-md w-full">
+                    <h3 class="text-lg font-semibold mb-2">Configuração</h3>
+                    <p class="text-slate-400 text-sm mb-4">Cola aqui a tua chave grátis da API-Football (<a href="https://dashboard.api-football.com" target="_blank" class="text-emerald-400 underline">dashboard.api-football.com</a>). Fica guardada só neste browser.</p>
+                    <input id="config-api-key" type="text" value="${key}" placeholder="Chave da API-Football"
+                        class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-3 text-sm font-mono mb-4">
+                    <div class="flex gap-x-2">
+                        <button onclick="guardarConfig()" class="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 rounded-3xl font-semibold text-sm">Guardar</button>
+                        <button onclick="fecharConfigModal()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-3xl text-sm">Cancelar</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+        }
+
+        function fecharConfigModal() {
+            const modal = document.getElementById('config-modal');
+            if (modal) modal.remove();
+        }
+
+        function guardarConfig() {
+            const key = document.getElementById('config-api-key').value.trim();
+            localStorage.setItem('apifootball_key', key);
+            fecharConfigModal();
+            atualizarJogosAoVivo();
         }
 
         function adicionarJogoParaAlertas(id) {
