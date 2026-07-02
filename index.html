@@ -14,8 +14,6 @@
         .filter-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
         .game-card { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         .game-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
-        .highlight { border-color: #eab308; background-color: #451a03; }
-        .section-header { font-size: 1.1rem; font-weight: 600; color: #f3e8ff; margin-bottom: 0.75rem; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-200">
@@ -29,10 +27,10 @@
                 </div>
                 <div>
                     <h1 class="font-display text-3xl font-semibold tracking-tighter">Agregador</h1>
-                    <p class="text-emerald-400 text-xs -mt-1">Filtros &amp; Bots • v1.2</p>
+                    <p class="text-emerald-400 text-xs -mt-1">Filtros &amp; Bots • v1.3</p>
                 </div>
             </div>
-            <button onclick="showConfigModal()" class="flex items-center gap-x-2 px-4 py-2 text-sm bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-3xl">
+            <button onclick="showConfigModal()" class="px-4 py-2 text-sm bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-3xl">
                 <i class="fa-solid fa-cog"></i> <span class="hidden md:inline">Config</span>
             </button>
         </div>
@@ -44,12 +42,6 @@
             <button onclick="switchTab('filtros')" id="tab-filtros" class="nav-tab px-6 py-3 text-sm font-medium border-b-2 border-transparent flex items-center gap-x-2 tab-active">
                 <i class="fa-solid fa-list-check w-4"></i><span>Meus Filtros</span>
             </button>
-            <button onclick="switchTab('criar')" id="tab-criar" class="nav-tab px-6 py-3 text-sm font-medium border-b-2 border-transparent flex items-center gap-x-2 text-slate-400">
-                <i class="fa-solid fa-plus w-4"></i><span>Criar Filtro</span>
-            </button>
-            <button onclick="switchTab('importar')" id="tab-importar" class="nav-tab px-6 py-3 text-sm font-medium border-b-2 border-transparent flex items-center gap-x-2 text-slate-400">
-                <i class="fa-solid fa-download w-4"></i><span>Importar</span>
-            </button>
             <button onclick="switchTab('jogos')" id="tab-jogos" class="nav-tab px-6 py-3 text-sm font-medium border-b-2 border-transparent flex items-center gap-x-2 text-slate-400">
                 <i class="fa-solid fa-futbol w-4"></i><span>Jogos ao Vivo</span>
             </button>
@@ -60,21 +52,16 @@
     </div>
 
     <div class="max-w-7xl mx-auto px-6 py-6">
+        
         <!-- MEUS FILTROS -->
         <div id="content-filtros">
             <div class="flex items-center justify-between mb-4">
                 <div>
                     <h2 class="text-2xl font-semibold">Meus Filtros</h2>
-                    <p class="text-slate-400 text-sm">Filtros simples + compostos</p>
                 </div>
-                <div class="flex gap-x-2">
-                    <button onclick="abrirModalFiltroComposto()" class="flex items-center gap-x-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-3xl">
-                        <i class="fa-solid fa-link mr-2"></i> <span>Criar Filtro Composto</span>
-                    </button>
-                    <button onclick="switchTab('criar')" class="flex items-center gap-x-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-3xl">
-                        <i class="fa-solid fa-plus mr-2"></i> <span>Novo Filtro</span>
-                    </button>
-                </div>
+                <button onclick="switchTab('criar')" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-3xl">
+                    <i class="fa-solid fa-plus mr-2"></i> Novo Filtro
+                </button>
             </div>
             <div id="filtros-lista" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
         </div>
@@ -84,7 +71,6 @@
             <div class="flex items-center justify-between mb-4">
                 <div>
                     <h2 class="text-2xl font-semibold">Jogos ao Vivo</h2>
-                    <p class="text-slate-400 text-sm">Todos os jogos encontrados • Destaque automático dos teus filtros</p>
                 </div>
                 <button onclick="atualizarJogosAoVivo(true)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-3xl text-sm">
                     <i class="fa-solid fa-sync-alt mr-2"></i> Atualizar agora
@@ -93,8 +79,13 @@
             <div id="jogos-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
         </div>
 
-        <!-- Outras abas (importar, alertas, etc.) mantidas -->
-        <!-- ... (código completo) ... -->
+        <!-- ALERTAS -->
+        <div id="content-alertas" class="hidden">
+            <div class="max-w-3xl">
+                <h2 class="text-2xl font-semibold mb-2">Alertas</h2>
+                <p class="text-slate-400">Exporta filtros para Activepieces.</p>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -140,7 +131,14 @@
             });
         }
 
-        // Funções de exportação
+        function eliminarFiltro(i) {
+            if (confirm('Eliminar filtro?')) {
+                filtros.splice(i, 1);
+                guardarFiltros();
+                renderFiltros();
+            }
+        }
+
         function exportarParaAlertas(i) {
             const f = filtros[i];
             const data = {nome: f.nome, tipo: f.tipo, mercado: f.mercado, condicoes: f.condicoes || []};
@@ -155,20 +153,11 @@
             navigator.clipboard.writeText(JSON.stringify(filtros[i], null, 2)).then(() => alert('JSON copiado!'));
         }
 
-        function eliminarFiltro(i) {
-            if (confirm('Eliminar filtro?')) {
-                filtros.splice(i, 1);
-                guardarFiltros();
-                renderFiltros();
-            }
-        }
-
-        // Jogos ao Vivo
         async function atualizarJogosAoVivo() {
             const container = document.getElementById('jogos-container');
             container.innerHTML = '<div class="col-span-full text-center py-8 text-emerald-400">A carregar jogos ao vivo...</div>';
-            
-            // Placeholder - substituir por API real
+
+            // Placeholder - substituir por API real quando tiveres a chave
             jogosAoVivo = [
                 {id:1, casa:"Benfica", fora:"Porto", placar:"1-0", minuto:"67'", competicao:"Liga Portugal", fonte:"LiveScore"},
                 {id:2, casa:"Real Madrid", fora:"Barcelona", placar:"2-1", minuto:"45'", competicao:"La Liga", fonte:"LiveScore"},
@@ -204,6 +193,10 @@
             document.getElementById('content-' + tab).classList.remove('hidden');
             if (tab === 'filtros') renderFiltros();
             if (tab === 'jogos') atualizarJogosAoVivo();
+        }
+
+        function showConfigModal() {
+            alert('Configurações (podes expandir depois)');
         }
 
         window.onload = init;
