@@ -106,9 +106,12 @@
                     <h2 class="text-2xl font-semibold">Jogos ao Vivo</h2>
                     <p class="text-slate-400 text-sm">Todos os jogos encontrados • Destaque automático</p>
                 </div>
-                <button onclick="atualizarJogosAoVivo(true)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-3xl text-sm">
-                    <i class="fa-solid fa-sync-alt mr-2"></i> Atualizar agora
-                </button>
+                <div class="flex items-center gap-x-3">
+                    <span id="robobet-ext-status" class="text-xs text-slate-500">⚪ Extensão RoboBet não detetada</span>
+                    <button onclick="atualizarJogosAoVivo(true)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-3xl text-sm">
+                        <i class="fa-solid fa-sync-alt mr-2"></i> Atualizar agora
+                    </button>
+                </div>
             </div>
             <div id="jogos-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
         </div>
@@ -124,12 +127,14 @@
 
     <script>
         let filtros = [];
-        let jogosAoVivo = [];
+        let jogosLiveScore = [];
+        let jogosRoboBet = [];
         let jogosCarregados = false;
 
         function init() {
             carregarFiltros();
             renderFiltros();
+            lerCacheRoboBet();
             switchTab('filtros');
         }
 
@@ -193,6 +198,51 @@
         const LIVESCORE_URL = 'https://livescore6.p.rapidapi.com/matches/v2/list-live?Category=soccer&Timezone=0';
         const LIVESCORE_HOST = 'livescore6.p.rapidapi.com';
 
+        // Lê os dados que a extensão do browser guardou no localStorage desta página,
+        // vindos da tua sessão aberta do RoboBet. Se a extensão não estiver instalada
+        // ou a aba do RoboBet não estiver aberta, isto simplesmente não encontra nada.
+        function lerCacheRoboBet() {
+            const raw = localStorage.getItem('robobet_inplay_cache');
+            if (!raw) return;
+
+            try {
+                const cache = JSON.parse(raw);
+                const resposta = cache.data || {};
+                jogosRoboBet = (resposta.events || []).map(e => ({
+                    id: 'rb-' + e.id,
+                    casa: e.home,
+                    fora: e.away,
+                    golosCasa: e.scoreHome,
+                    golosFora: e.scoreAway,
+                    minuto: e.time || (e.minute ? e.minute + "'" : ''),
+                    competicao: (e.league && e.league.name) || '',
+                    fonte: 'RoboBet',
+                    ts: cache.ts,
+                    stats: e.live_stats || null,
+                    superiority: e.superiority || null
+                }));
+                jogosCarregados = true;
+                renderJogosAoVivo();
+            } catch (err) {
+                console.error('Erro a ler cache do RoboBet:', err);
+            }
+        }
+
+        // Atualiza-se sozinho sempre que a extensão trouxer dados novos do RoboBet.
+        window.addEventListener('robobet-dados-atualizados', lerCacheRoboBet);
+
+        function estadoExtensaoRoboBet() {
+            const raw = localStorage.getItem('robobet_inplay_cache');
+            if (!raw) return null;
+            try {
+                const cache = JSON.parse(raw);
+                const segundos = (Date.now() - cache.ts) / 1000;
+                return segundos < 120; // considera "ligada" se houve dados nos últimos 2 minutos
+            } catch (e) {
+                return null;
+            }
+        }
+
         function formatMinuto(eps) {
             if (!eps) return '';
             if (/^\d+(\+\d+)?$/.test(eps)) return eps + "'"; // ex: "45" ou "45+2"
@@ -236,18 +286,19 @@
                         const t1 = (e.T1 && e.T1[0]) || {};
                         const t2 = (e.T2 && e.T2[0]) || {};
                         jogos.push({
-                            id: e.Eid,
+                            id: 'ls-' + e.Eid,
                             casa: t1.Nm || '?',
                             fora: t2.Nm || '?',
                             golosCasa: e.Tr1 ?? '-',
                             golosFora: e.Tr2 ?? '-',
                             minuto: formatMinuto(e.Eps),
-                            competicao: stage.Cnm + (stage.Snm ? ' · ' + stage.Snm : '')
+                            competicao: stage.Cnm + (stage.Snm ? ' · ' + stage.Snm : ''),
+                            fonte: 'LiveScore'
                         });
                     });
                 });
 
-                jogosAoVivo = jogos;
+                jogosLiveScore = jogos;
                 jogosCarregados = true;
                 renderJogosAoVivo();
             } catch (err) {
@@ -265,25 +316,45 @@
             const container = document.getElementById('jogos-container');
             container.innerHTML = '';
 
-            if (jogosAoVivo.length === 0) {
+            const todos = [...jogosLiveScore, ...jogosRoboBet];
+
+            const statusExt = document.getElementById('robobet-ext-status');
+            if (statusExt) {
+                const ligada = estadoExtensaoRoboBet();
+                statusExt.textContent = ligada
+                    ? '🟢 Extensão RoboBet ligada'
+                    : (ligada === false ? '🟡 Extensão RoboBet sem dados recentes' : '⚪ Extensão RoboBet não detetada');
+            }
+
+            if (todos.length === 0) {
                 container.innerHTML = jogosCarregados
                     ? '<div class="col-span-full text-center py-10 text-slate-400">Sem jogos ao vivo neste momento.</div>'
                     : '<div class="col-span-full text-center py-10 text-slate-400">Clica em "Atualizar agora" para carregar os jogos ao vivo.</div>';
                 return;
             }
 
-            jogosAoVivo.forEach(j => {
+            todos.forEach(j => {
+                const badge = j.fonte === 'RoboBet'
+                    ? '<span class="text-xs px-2 py-0.5 bg-purple-600 rounded-full">RoboBet</span>'
+                    : '<span class="text-xs px-2 py-0.5 bg-slate-700 rounded-full">LiveScore</span>';
+
+                const statsExtra = (j.stats && j.stats.corners)
+                    ? `<div class="text-xs text-slate-400 mt-2">Cantos: ${j.stats.corners.home}-${j.stats.corners.away} · Posse: ${j.stats.possession.home}%-${j.stats.possession.away}%</div>`
+                    : '';
+
                 const card = document.createElement('div');
                 card.className = `game-card bg-slate-900 border border-slate-700 rounded-3xl p-5`;
                 card.innerHTML = `
-                    <div class="flex justify-between">
+                    <div class="flex justify-between items-start">
                         <div>
                             <div class="text-xs text-slate-500 mb-1">${j.competicao}</div>
                             <div class="font-semibold">${j.casa} vs ${j.fora}</div>
                             <div class="text-emerald-400 text-xl">${j.golosCasa} - ${j.golosFora} <span class="text-xs">${j.minuto}</span></div>
+                            ${statsExtra}
                         </div>
+                        ${badge}
                     </div>
-                    <button onclick="adicionarJogoParaAlertas(${j.id})" class="mt-4 w-full py-2 bg-purple-600 hover:bg-purple-700 rounded-2xl text-sm">Adicionar a Alertas</button>
+                    <button onclick="adicionarJogoParaAlertas('${j.id}')" class="mt-4 w-full py-2 bg-purple-600 hover:bg-purple-700 rounded-2xl text-sm">Adicionar a Alertas</button>
                 `;
                 container.appendChild(card);
             });
