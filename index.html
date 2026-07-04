@@ -2,714 +2,402 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agregador • Filtros & Bots</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        body { font-family: 'Inter', system_ui, sans-serif; }
-        .font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; font-weight: 600; }
-        .tab-active { border-bottom: 3px solid #10b981; color: #10b981; font-weight: 600; }
-        .filter-card { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-        .filter-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
-        .game-card { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-        .game-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
-        .highlight { border-color: #eab308; background-color: #451a03; }
-        .section-header { font-size: 1.1rem; font-weight: 600; color: #f3e8ff; margin-bottom: 0.75rem; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agregador • Filtros & Bots</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          pitch: { DEFAULT: '#0A0D10', 900: '#0A0D10', 800: '#12161B', 700: '#1A1F26', 600: '#242A33' },
+          chalk: { DEFAULT: '#EDEDEA', 400: '#9CA3AF', 500: '#8B92A0' },
+          gold:  { DEFAULT: '#F2B705', 600: '#C99A04' },
+          turf:  { DEFAULT: '#1F9D5C', 700: '#166B40' },
+          signal:{ DEFAULT: '#D64545', 700: '#A93636' },
+        },
+        fontFamily: {
+          display: ['"Space Grotesk"', 'sans-serif'],
+          mono: ['"JetBrains Mono"', 'monospace'],
+          sans: ['Inter', 'sans-serif'],
+        },
+      }
+    }
+  }
+</script>
+<style>
+  body { font-family: 'Inter', system-ui, sans-serif; }
+
+  /* --- Ticker (fita de placares ao vivo) --- */
+  .ticker-wrap { overflow: hidden; position: relative; }
+  .ticker-track {
+    display: flex;
+    width: max-content;
+    animation: ticker-scroll 38s linear infinite;
+  }
+  .ticker-track:hover { animation-play-state: paused; }
+  @keyframes ticker-scroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ticker-track { animation: none; overflow-x: auto; }
+  }
+
+  .live-dot {
+    width: 7px; height: 7px; border-radius: 9999px; background: #D64545;
+    box-shadow: 0 0 0 0 rgba(214,69,69,0.6);
+    animation: live-pulse 1.8s ease-out infinite;
+  }
+  @keyframes live-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(214,69,69,0.55); }
+    70%  { box-shadow: 0 0 0 7px rgba(214,69,69,0); }
+    100% { box-shadow: 0 0 0 0 rgba(214,69,69,0); }
+  }
+
+  /* --- Tabs estilo "segmento de placar" --- */
+  .nav-tab { position: relative; }
+  .tab-active { color: #F2B705; }
+  .tab-active .tab-led { background: #F2B705; box-shadow: 0 0 6px 1px rgba(242,183,5,0.6); }
+  .tab-active::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: #F2B705;
+  }
+  .tab-led { width: 6px; height: 6px; border-radius: 9999px; background: #3A4048; transition: background .15s, box-shadow .15s; }
+
+  .filter-card, .game-card {
+    transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+  }
+  .filter-card:hover, .game-card:hover {
+    transform: translateY(-2px);
+    border-color: #3A4048;
+    box-shadow: 0 12px 24px -12px rgba(0,0,0,0.6);
+  }
+
+  .key-btn {
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.03em;
+  }
+
+  :focus-visible {
+    outline: 2px solid #F2B705;
+    outline-offset: 2px;
+  }
+</style>
 </head>
-<body class="bg-slate-950 text-slate-200">
+<body class="bg-pitch-900 text-chalk">
 
-    <!-- Header -->
-    <div class="border-b border-slate-800 bg-slate-900">
-        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-            <div class="flex items-center gap-x-3">
-                <div class="w-10 h-10 bg-emerald-500 rounded-2xl flex items-center justify-center">
-                    <i class="fa-solid fa-robot text-white text-2xl"></i>
-                </div>
-                <div>
-                    <h1 class="font-display text-3xl font-semibold tracking-tighter">Agregador</h1>
-                    <p class="text-emerald-400 text-xs -mt-1">Filtros &amp; Bots • v1.1</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-x-2">
-                <button onclick="alternarModoDemonstracao()" id="btn-demo" class="flex items-center gap-x-2 px-4 py-2 text-sm bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-3xl">
-                    <i class="fa-solid fa-masks-theater"></i> <span id="btn-demo-texto" class="hidden md:inline">Modo Demonstração: Off</span>
-                </button>
-                <button onclick="showConfigModal()" class="flex items-center gap-x-2 px-4 py-2 text-sm bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-3xl">
-                    <i class="fa-solid fa-cog"></i> <span class="hidden md:inline">Config</span>
-                </button>
-            </div>
+  <!-- TICKER: fita de placares ao vivo -->
+  <div class="bg-pitch-800 border-b border-pitch-600">
+    <div class="flex items-center">
+      <div class="flex-none flex items-center gap-x-2 px-4 py-2 bg-pitch-700 border-r border-pitch-600 z-10">
+        <span class="live-dot"></span>
+        <span class="font-mono text-[11px] tracking-widest text-signal font-bold">AO VIVO</span>
+      </div>
+      <div class="ticker-wrap flex-1">
+        <div id="ticker-track" class="ticker-track font-mono text-xs text-chalk-500 py-2">
+          <!-- preenchido via JS -->
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="border-b border-pitch-600 bg-pitch-800">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-x-3">
+        <div class="w-10 h-10 bg-gold rounded-xl flex items-center justify-center">
+          <i class="fa-solid fa-satellite-dish text-pitch-900 text-lg"></i>
+        </div>
+        <div>
+          <h1 class="font-display text-2xl font-semibold tracking-tight leading-none">Agregador</h1>
+          <p class="text-gold font-mono text-[11px] tracking-wide mt-1">FILTROS &amp; BOTS · V1.2</p>
+        </div>
+      </div>
+      <button onclick="showConfigModal()" class="flex items-center gap-x-2 px-4 py-2 text-sm bg-pitch-700 hover:bg-pitch-600 border border-pitch-600 rounded-lg transition-colors">
+        <i class="fa-solid fa-sliders"></i> <span class="hidden md:inline">Config</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="max-w-7xl mx-auto px-6 pt-6">
+    <div class="flex border-b border-pitch-600 overflow-x-auto">
+      <button onclick="switchTab('filtros')" id="tab-filtros" class="nav-tab px-6 py-3 text-sm font-medium flex items-center gap-x-2 tab-active">
+        <span class="tab-led"></span><span>Meus Filtros</span>
+      </button>
+      <button onclick="switchTab('criar')" id="tab-criar" class="nav-tab px-6 py-3 text-sm font-medium flex items-center gap-x-2 text-chalk-400">
+        <span class="tab-led"></span><span>Criar Filtro</span>
+      </button>
+      <button onclick="switchTab('importar')" id="tab-importar" class="nav-tab px-6 py-3 text-sm font-medium flex items-center gap-x-2 text-chalk-400">
+        <span class="tab-led"></span><span>Importar</span>
+      </button>
+      <button onclick="switchTab('jogos')" id="tab-jogos" class="nav-tab px-6 py-3 text-sm font-medium flex items-center gap-x-2 text-chalk-400">
+        <span class="tab-led"></span><span>Jogos ao Vivo</span>
+      </button>
+      <button onclick="switchTab('alertas')" id="tab-alertas" class="nav-tab px-6 py-3 text-sm font-medium flex items-center gap-x-2 text-chalk-400">
+        <span class="tab-led"></span><span>Alertas</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-6 py-6">
+
+    <!-- MEUS FILTROS -->
+    <div id="content-filtros">
+      <div class="flex items-center justify-between mb-4 flex-wrap gap-y-3">
+        <div>
+          <h2 class="font-display text-xl font-semibold">Meus Filtros</h2>
+          <p class="text-chalk-500 text-sm">Filtros simples + compostos</p>
+        </div>
+        <div class="flex gap-x-2">
+          <button onclick="abrirModalFiltroComposto()" class="key-btn flex items-center gap-x-2 px-4 py-2.5 bg-pitch-700 hover:bg-pitch-600 border border-pitch-600 text-chalk text-xs font-semibold uppercase rounded-lg transition-colors">
+            <i class="fa-solid fa-link"></i> Filtro composto
+          </button>
+          <button onclick="switchTab('criar')" class="key-btn flex items-center gap-x-2 px-5 py-2.5 bg-gold hover:bg-gold-600 text-pitch-900 text-xs font-bold uppercase rounded-lg transition-colors">
+            <i class="fa-solid fa-plus"></i> Novo filtro
+          </button>
+        </div>
+      </div>
+      <div id="filtros-lista" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      <div id="filtros-empty" class="hidden border border-dashed border-pitch-600 rounded-xl p-10 text-center">
+        <i class="fa-solid fa-filter-circle-xmark text-2xl text-chalk-500 mb-3"></i>
+        <p class="text-chalk-500 text-sm">Ainda não há filtros guardados.</p>
+        <p class="text-chalk-500 text-xs mt-1">Importe um filtro existente ou crie um filtro composto para começar.</p>
+      </div>
     </div>
 
-    <!-- Tabs -->
-    <div class="max-w-7xl mx-auto px-6 pt-6">
-        <div class="flex border-b border-slate-800 overflow-x-auto">
-            <button onclick="switchTab('filtros')" id="tab-filtros" class="nav-tab px-6 py-3 text-sm font-medium border-b-2 border-transparent flex items-center gap-x-2 tab-active">
-                <i class="fa-solid fa-list-check w-4"></i><span>Meus Filtros</span>
-            </button>
-            <button onclick="switchTab('criar')" id="tab-criar" class="nav-tab px-6 py-3 text-sm font-medium border-b-2 border-transparent flex items-center gap-x-2 text-slate-400">
-                <i class="fa-solid fa-plus w-4"></i><span>Criar Filtro</span>
-            </button>
-            <button onclick="switchTab('importar')" id="tab-importar" class="nav-tab px-6 py-3 text-sm font-medium border-b-2 border-transparent flex items-center gap-x-2 text-slate-400">
-                <i class="fa-solid fa-download w-4"></i><span>Importar</span>
-            </button>
-            <button onclick="switchTab('jogos')" id="tab-jogos" class="nav-tab px-6 py-3 text-sm font-medium border-b-2 border-transparent flex items-center gap-x-2 text-slate-400">
-                <i class="fa-solid fa-futbol w-4"></i><span>Jogos ao Vivo</span>
-            </button>
-            <button onclick="switchTab('alertas')" id="tab-alertas" class="nav-tab px-6 py-3 text-sm font-medium border-b-2 border-transparent flex items-center gap-x-2 text-slate-400">
-                <i class="fa-solid fa-bell w-4"></i><span>Alertas</span>
-            </button>
+    <!-- CRIAR FILTRO -->
+    <div id="content-criar" class="hidden">
+      <div class="max-w-3xl">
+        <h2 class="font-display text-xl font-semibold mb-1">Criar Novo Filtro</h2>
+        <p class="text-chalk-500 text-sm mb-4">Duas formas de adicionar um filtro à sua lista, por agora.</p>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <button onclick="switchTab('importar')" class="text-left bg-pitch-800 border border-pitch-600 hover:border-gold/60 rounded-xl p-5 transition-colors">
+            <i class="fa-solid fa-download text-gold mb-2"></i>
+            <div class="font-semibold text-sm">Importar JSON</div>
+            <p class="text-chalk-500 text-xs mt-1">Cole a configuração de um filtro exportado.</p>
+          </button>
+          <button onclick="abrirModalFiltroComposto()" class="text-left bg-pitch-800 border border-pitch-600 hover:border-gold/60 rounded-xl p-5 transition-colors">
+            <i class="fa-solid fa-link text-gold mb-2"></i>
+            <div class="font-semibold text-sm">Filtro composto</div>
+            <p class="text-chalk-500 text-xs mt-1">Combine condições existentes num novo filtro.</p>
+          </button>
         </div>
+      </div>
     </div>
 
-    <div class="max-w-7xl mx-auto px-6 py-6">
-        <!-- MEUS FILTROS -->
-        <div id="content-filtros">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h2 class="text-2xl font-semibold">Meus Filtros</h2>
-                    <p class="text-slate-400 text-sm">Filtros simples + compostos</p>
-                </div>
-                <div class="flex gap-x-2">
-                    <button onclick="switchTab('criar')" class="flex items-center gap-x-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-3xl">
-                        <i class="fa-solid fa-plus mr-2"></i> <span>Novo Filtro</span>
-                    </button>
-                </div>
-            </div>
-            <div id="filtros-lista" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-        </div>
-
-        <!-- CRIAR FILTRO -->
-        <div id="content-criar" class="hidden">
-            <div class="max-w-3xl">
-                <h2 class="text-2xl font-semibold mb-4">Criar Novo Filtro</h2>
-                <div class="max-w-3xl bg-slate-900 border border-slate-700 rounded-3xl p-6">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium mb-1 text-slate-300">Nome do Filtro</label>
-                            <input id="f-nome" type="text" placeholder="Ex: Cantos altos ao intervalo" class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-3 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1 text-slate-300">Mercado</label>
-                            <select id="f-mercado" class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-3 text-sm text-slate-100">
-                                <option value="Golos">Golos</option>
-                                <option value="Cantos">Cantos</option>
-                                <option value="Outro">Outro</option>
-                            </select>
-                        </div>
-
-                        <div class="border-t border-slate-800 pt-4">
-                            <div class="flex items-center justify-between mb-3">
-                                <h3 class="text-sm font-semibold text-emerald-400">Condições (todas têm de ser verdadeiras)</h3>
-                                <button onclick="adicionarLinhaCondicao()" class="text-xs px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-full">
-                                    <i class="fa-solid fa-plus mr-1"></i> Condição
-                                </button>
-                            </div>
-                            <div id="condicoes-lista" class="space-y-2"></div>
-                            <p class="text-xs text-slate-500 mt-2">Campos marcados "só RoboBet" nunca vão coincidir com jogos vindos da LiveScore - essa fonte não tem essas estatísticas.</p>
-                        </div>
-
-                        <button onclick="criarNovoFiltro()" class="w-full mt-4 py-3 bg-emerald-500 hover:bg-emerald-600 rounded-3xl font-semibold text-sm text-white">Guardar Filtro</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- IMPORTAR -->
-        <div id="content-importar" class="hidden">
-            <div class="max-w-2xl">
-                <h2 class="text-2xl font-semibold mb-2">Importar Filtro</h2>
-                <textarea id="import-text" rows="8" placeholder="Cole o JSON aqui..." class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-sm font-mono"></textarea>
-                <button onclick="importarFiltro()" class="mt-3 w-full py-3 bg-emerald-500 hover:bg-emerald-600 rounded-3xl font-semibold">Importar</button>
-            </div>
-        </div>
-
-        <!-- JOGOS AO VIVO -->
-        <div id="content-jogos" class="hidden">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h2 class="text-2xl font-semibold">Jogos ao Vivo</h2>
-                    <p class="text-slate-400 text-sm">Todos os jogos encontrados • Destaque automático</p>
-                </div>
-                <div class="flex items-center gap-x-3">
-                    <span id="robobet-ext-status" class="text-xs text-slate-500">⚪ RoboBet não detetado</span>
-                    <span id="sokkerpro-ext-status" class="text-xs text-slate-500">⚪ SokkerPro não detetado</span>
-                    <button onclick="atualizarJogosAoVivo(true)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-3xl text-sm">
-                        <i class="fa-solid fa-sync-alt mr-2"></i> Atualizar agora
-                    </button>
-                </div>
-            </div>
-            <div id="jogos-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-        </div>
-
-        <!-- ALERTAS -->
-        <div id="content-alertas" class="hidden">
-            <div class="max-w-3xl">
-                <h2 class="text-2xl font-semibold mb-2">Alertas Ativos</h2>
-                <p class="text-slate-400 text-sm mb-4">Jogos que, neste momento, cumprem as condições de algum dos teus filtros.</p>
-                <div id="alertas-lista" class="space-y-3"></div>
-            </div>
-        </div>
+    <!-- IMPORTAR -->
+    <div id="content-importar" class="hidden">
+      <div class="max-w-2xl">
+        <h2 class="font-display text-xl font-semibold mb-1">Importar Filtro</h2>
+        <p class="text-chalk-500 text-sm mb-3">Cole abaixo o JSON exportado de outro filtro.</p>
+        <textarea id="import-text" rows="8" placeholder="Cole o JSON aqui..." class="w-full bg-pitch-800 border border-pitch-600 rounded-lg p-4 text-sm font-mono focus:border-gold outline-none"></textarea>
+        <button onclick="importarFiltro()" class="key-btn mt-3 w-full py-3 bg-gold hover:bg-gold-600 text-pitch-900 rounded-lg font-bold text-sm uppercase transition-colors">Importar filtro</button>
+      </div>
     </div>
 
-    <script>
-        let filtros = [];
-        let jogosLiveScore = [];
-        let jogosRoboBet = [];
-        let jogosSokkerPro = [];
-        let jogosCarregados = false;
-
-        // ---- Modo Demonstração: esconde de que fontes vêm os dados, para mostrares o projeto sem revelar isso ----
-        const NOMES_DEMO = { RoboBet: 'Fonte Alfa', SokkerPro: 'Fonte Beta', LiveScore: 'Fonte Gama' };
-
-        function modoDemonstracaoAtivo() {
-            return localStorage.getItem('modo_demonstracao') === 'on';
-        }
-
-        function nomeFonteExibicao(fonte) {
-            return modoDemonstracaoAtivo() ? (NOMES_DEMO[fonte] || fonte) : fonte;
-        }
-
-        function alternarModoDemonstracao() {
-            const ativo = modoDemonstracaoAtivo();
-            localStorage.setItem('modo_demonstracao', ativo ? 'off' : 'on');
-            atualizarBotaoDemo();
-            renderJogosAoVivo();
-            renderFiltros();
-        }
-
-        function atualizarBotaoDemo() {
-            const texto = document.getElementById('btn-demo-texto');
-            const btn = document.getElementById('btn-demo');
-            if (!texto || !btn) return;
-            const ativo = modoDemonstracaoAtivo();
-            texto.textContent = 'Modo Demonstração: ' + (ativo ? 'On' : 'Off');
-            btn.classList.toggle('border-yellow-500', ativo);
-            btn.classList.toggle('text-yellow-400', ativo);
-        }
-
-        function init() {
-            carregarFiltros();
-            renderFiltros();
-            lerCacheRoboBet();
-            lerCacheSokkerPro();
-            atualizarBotaoDemo();
-            switchTab('filtros');
-        }
-
-        function carregarFiltros() {
-            const saved = localStorage.getItem('agregador_filtros');
-            if (saved) filtros = JSON.parse(saved);
-        }
-
-        function guardarFiltros() {
-            localStorage.setItem('agregador_filtros', JSON.stringify(filtros));
-        }
-
-        function resumoCondicoes(f) {
-            if (!f.condicoes || f.condicoes.length === 0) return '<span class="text-slate-500">Sem condições</span>';
-            const nomes = Object.fromEntries(CAMPOS_DISPONIVEIS.map(c => [c.valor, c.label]));
-            const simbolos = { '>': '>', '>=': '≥', '<': '<', '<=': '≤', '==': '=' };
-            return f.condicoes.map(c => `${nomes[c.campo] || c.campo} ${simbolos[c.operador] || c.operador} ${c.valor}`).join(' <span class="text-slate-600">E</span> ');
-        }
-
-        function renderFiltros() {
-            const container = document.getElementById('filtros-lista');
-            container.innerHTML = '';
-            filtros.forEach((f, i) => {
-                const card = document.createElement('div');
-                card.className = `filter-card bg-slate-900 border border-slate-700 rounded-3xl p-5`;
-                card.innerHTML = `
-                    <div class="flex justify-between">
-                        <div>
-                            <div class="font-semibold">${f.nome}</div>
-                            <div class="text-sm text-slate-400">${f.mercado || ''}</div>
-                        </div>
-                        <button onclick="eliminarFiltro(${i})" class="text-red-400"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-                    <div class="mt-3 text-xs text-slate-300 bg-slate-950 p-2 rounded-xl">${resumoCondicoes(f)}</div>
-                    <div class="mt-4 grid grid-cols-3 gap-2">
-                        <button onclick="exportarParaRobobet(${i})" class="text-xs py-2 bg-slate-800 hover:bg-slate-700 rounded-2xl">RoboBet</button>
-                        <button onclick="exportarParaAlertas(${i})" class="text-xs py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl">Alertas</button>
-                        <button onclick="exportarComoJSON(${i})" class="text-xs py-2 bg-slate-800 hover:bg-slate-700 rounded-2xl">JSON</button>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        function eliminarFiltro(i) {
-            if (confirm('Eliminar?')) {
-                filtros.splice(i, 1);
-                guardarFiltros();
-                renderFiltros();
-            }
-        }
-
-        function exportarParaAlertas(i) {
-            const f = filtros[i];
-            const data = {nome: f.nome, tipo: f.tipo, mercado: f.mercado, condicoes: f.condicoes || []};
-            navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => alert('JSON copiado para alertas!'));
-        }
-
-        function exportarParaRobobet(i) {
-            alert('Copiado para RoboBet (formato básico)');
-        }
-
-        function exportarComoJSON(i) {
-            navigator.clipboard.writeText(JSON.stringify(filtros[i], null, 2)).then(() => alert('JSON copiado!'));
-        }
-
-        // Chave grátis em https://rapidapi.com/apidojo/api/livescore6 (plano Basic, 500 pedidos/mês).
-        // Guardada só neste browser via localStorage - configura em "Config".
-        const LIVESCORE_URL = 'https://livescore6.p.rapidapi.com/matches/v2/list-live?Category=soccer&Timezone=0';
-        const LIVESCORE_HOST = 'livescore6.p.rapidapi.com';
-
-        // Lê os dados que a extensão do browser guardou no localStorage desta página,
-        // vindos da tua sessão aberta do RoboBet. Se a extensão não estiver instalada
-        // ou a aba do RoboBet não estiver aberta, isto simplesmente não encontra nada.
-        function lerCacheRoboBet() {
-            const raw = localStorage.getItem('robobet_inplay_cache');
-            if (!raw) return;
-
-            try {
-                const cache = JSON.parse(raw);
-                const resposta = cache.data || {};
-                jogosRoboBet = (resposta.events || []).map(e => ({
-                    id: 'rb-' + e.id,
-                    casa: e.home,
-                    fora: e.away,
-                    golosCasa: e.scoreHome,
-                    golosFora: e.scoreAway,
-                    minuto: e.time || (e.minute ? e.minute + "'" : ''),
-                    competicao: (e.league && e.league.name) || '',
-                    fonte: 'RoboBet',
-                    ts: cache.ts,
-                    stats: e.live_stats || null,
-                    superiority: e.superiority || null
-                }));
-                jogosCarregados = true;
-                renderJogosAoVivo();
-            } catch (err) {
-                console.error('Erro a ler cache do RoboBet:', err);
-            }
-        }
-
-        // Atualiza-se sozinho sempre que a extensão trouxer dados novos do RoboBet.
-        window.addEventListener('robobet-dados-atualizados', lerCacheRoboBet);
-
-        function mapearFixtureSokkerPro(fx) {
-            let minuto;
-            if (fx.status === '1st' || fx.status === '2nd') minuto = (fx.minute || '0') + "'";
-            else if (fx.status === 'HT') minuto = 'Intervalo';
-            else if (fx.status === 'FT') minuto = 'Terminado';
-            else minuto = fx.status || '';
-
-            let prog = null;
-            try { prog = fx.prognosticos ? JSON.parse(fx.prognosticos) : null; } catch (e) { /* ignora */ }
-
-            const cantosCasa = parseFloat(fx.localCorners);
-            const cantosFora = parseFloat(fx.visitorCorners);
-            const posseCasa = parseFloat(fx.localBallPossession);
-            const posseFora = parseFloat(fx.visitorBallPossession);
-            const dapmCasa = parseFloat(fx.localDapmTotal);
-            const dapmFora = parseFloat(fx.visitorDapmTotal);
-
-            return {
-                id: 'sp-' + fx.fixtureId,
-                casa: fx.localTeamName || '?',
-                fora: fx.visitorTeamName || '?',
-                golosCasa: fx.scoresLocalTeam ?? '-',
-                golosFora: fx.scoresVisitorTeam ?? '-',
-                minuto: minuto,
-                competicao: (fx.countryName ? fx.countryName + ' · ' : '') + (fx.leagueName || ''),
-                fonte: 'SokkerPro',
-                stats: {
-                    corners: { home: cantosCasa || 0, away: cantosFora || 0, total: (cantosCasa || 0) + (cantosFora || 0) },
-                    possession: { home: isNaN(posseCasa) ? null : posseCasa, away: isNaN(posseFora) ? null : posseFora },
-                    appm_total: { total: (isNaN(dapmCasa) ? 0 : dapmCasa) + (isNaN(dapmFora) ? 0 : dapmFora) }
-                },
-                superiority: {
-                    home: parseFloat(fx.localPressureBar) || null,
-                    away: parseFloat(fx.visitorPressureBar) || null
-                },
-                golosHT: fx.scoresHT !== undefined ? parseFloat(fx.scoresHT) : null,
-                probOver25: prog && prog.mercado_gols && prog.mercado_gols.over_2_5 ? prog.mercado_gols.over_2_5.res : null,
-                probBTTS: prog && prog.mercado_ambos_marcam && prog.mercado_ambos_marcam.ambos_sim ? prog.mercado_ambos_marcam.ambos_sim.probabilidade : null
-            };
-        }
-
-        // Lê os dados que a extensão guardou no localStorage a partir da tua sessão
-        // aberta do SokkerPro. Sem extensão ou sem essa aba aberta, não encontra nada.
-        function lerCacheSokkerPro() {
-            const raw = localStorage.getItem('sokkerpro_inplay_cache');
-            if (!raw) return;
-
-            try {
-                const cache = JSON.parse(raw);
-                const resposta = cache.data || {};
-                const categorias = (resposta.data && resposta.data.sortedCategorizedFixtures) || [];
-                const jogos = [];
-                categorias.forEach(categoria => {
-                    (categoria.fixtures || []).forEach(fx => jogos.push(mapearFixtureSokkerPro(fx)));
-                });
-                jogosSokkerPro = jogos;
-                jogosCarregados = true;
-                renderJogosAoVivo();
-            } catch (err) {
-                console.error('Erro a ler cache do SokkerPro:', err);
-            }
-        }
-
-        window.addEventListener('sokkerpro-dados-atualizados', lerCacheSokkerPro);
-
-        function estadoExtensao(chaveCache) {
-            const raw = localStorage.getItem(chaveCache);
-            if (!raw) return null;
-            try {
-                const cache = JSON.parse(raw);
-                const segundos = (Date.now() - cache.ts) / 1000;
-                return segundos < 120;
-            } catch (e) {
-                return null;
-            }
-        }
-
-        function formatMinuto(eps) {
-            if (!eps) return '';
-            if (/^\d+(\+\d+)?$/.test(eps)) return eps + "'"; // ex: "45" ou "45+2"
-            const mapa = { 'HT': 'Intervalo', 'NS': 'Por começar', 'FT': 'Terminado', 'Postp.': 'Adiado' };
-            return mapa[eps] || eps;
-        }
-
-        async function atualizarJogosAoVivo() {
-            const container = document.getElementById('jogos-container');
-            const apiKey = localStorage.getItem('livescore_key');
-
-            if (!apiKey) {
-                container.innerHTML = `
-                    <div class="col-span-full text-center py-10 text-slate-400">
-                        <i class="fa-solid fa-key text-2xl mb-3 block"></i>
-                        Ainda não configuraste a tua chave da LiveScore (RapidAPI).
-                        <div class="mt-4">
-                            <button onclick="showConfigModal()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-3xl text-sm text-white font-medium">Configurar chave</button>
-                        </div>
-                    </div>`;
-                return;
-            }
-
-            container.innerHTML = '<div class="col-span-full text-center py-8"><i class="fa-solid fa-spinner fa-spin mr-2"></i>A carregar todos os jogos ao vivo...</div>';
-
-            try {
-                const res = await fetch(LIVESCORE_URL, {
-                    headers: {
-                        'x-rapidapi-key': apiKey,
-                        'x-rapidapi-host': LIVESCORE_HOST
-                    }
-                });
-
-                if (!res.ok) throw new Error('HTTP ' + res.status + ' - verifica a chave ou o limite mensal');
-
-                const data = await res.json();
-                const jogos = [];
-
-                (data.Stages || []).forEach(stage => {
-                    (stage.Events || []).forEach(e => {
-                        const t1 = (e.T1 && e.T1[0]) || {};
-                        const t2 = (e.T2 && e.T2[0]) || {};
-                        jogos.push({
-                            id: 'ls-' + e.Eid,
-                            casa: t1.Nm || '?',
-                            fora: t2.Nm || '?',
-                            golosCasa: e.Tr1 ?? '-',
-                            golosFora: e.Tr2 ?? '-',
-                            minuto: formatMinuto(e.Eps),
-                            competicao: stage.Cnm + (stage.Snm ? ' · ' + stage.Snm : ''),
-                            fonte: 'LiveScore'
-                        });
-                    });
-                });
-
-                jogosLiveScore = jogos;
-                jogosCarregados = true;
-                renderJogosAoVivo();
-            } catch (err) {
-                console.error('Erro a atualizar jogos ao vivo:', err);
-                container.innerHTML = `
-                    <div class="col-span-full text-center py-10 text-red-400">
-                        <i class="fa-solid fa-triangle-exclamation text-2xl mb-3 block"></i>
-                        Erro ao ligar à LiveScore: ${err.message}
-                        <div class="text-slate-400 text-sm mt-2">Verifica a chave em Config, ou se atingiste o limite mensal (500 pedidos/mês no plano grátis).</div>
-                    </div>`;
-            }
-        }
-
-        function renderJogosAoVivo() {
-            const container = document.getElementById('jogos-container');
-            container.innerHTML = '';
-
-            const todos = [...jogosLiveScore, ...jogosRoboBet, ...jogosSokkerPro];
-
-            const statusRB = document.getElementById('robobet-ext-status');
-            if (statusRB) {
-                const ligada = estadoExtensao('robobet_inplay_cache');
-                statusRB.textContent = ligada
-                    ? '🟢 RoboBet'
-                    : (ligada === false ? '🟡 RoboBet (sem dados recentes)' : '⚪ RoboBet não detetado');
-            }
-            const statusSP = document.getElementById('sokkerpro-ext-status');
-            if (statusSP) {
-                const ligada = estadoExtensao('sokkerpro_inplay_cache');
-                statusSP.textContent = ligada
-                    ? '🟢 SokkerPro'
-                    : (ligada === false ? '🟡 SokkerPro (sem dados recentes)' : '⚪ SokkerPro não detetado');
-            }
-
-            if (todos.length === 0) {
-                container.innerHTML = jogosCarregados
-                    ? '<div class="col-span-full text-center py-10 text-slate-400">Sem jogos ao vivo neste momento.</div>'
-                    : '<div class="col-span-full text-center py-10 text-slate-400">Clica em "Atualizar agora" para carregar os jogos ao vivo.</div>';
-                return;
-            }
-
-            todos.forEach(j => {
-                const nomeFonte = nomeFonteExibicao(j.fonte);
-                const corBadge = { RoboBet: 'bg-purple-600', SokkerPro: 'bg-blue-600', LiveScore: 'bg-slate-700' }[j.fonte] || 'bg-slate-700';
-                const badge = `<span class="text-xs px-2 py-0.5 ${corBadge} rounded-full">${nomeFonte}</span>`;
-
-                const statsExtra = (j.stats && j.stats.corners)
-                    ? `<div class="text-xs text-slate-400 mt-2">Cantos: ${j.stats.corners.home}-${j.stats.corners.away} · Posse: ${j.stats.possession.home}%-${j.stats.possession.away}%</div>`
-                    : '';
-
-                const coincidencias = filtrosQueCoincidem(j);
-                const emAlerta = coincidencias.length > 0;
-
-                const card = document.createElement('div');
-                card.className = `game-card bg-slate-900 border rounded-3xl p-5 ${emAlerta ? 'highlight' : 'border-slate-700'}`;
-                card.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <div class="text-xs text-slate-500 mb-1">${j.competicao}</div>
-                            <div class="font-semibold">${j.casa} vs ${j.fora}</div>
-                            <div class="text-emerald-400 text-xl">${j.golosCasa} - ${j.golosFora} <span class="text-xs">${j.minuto}</span></div>
-                            ${statsExtra}
-                            ${emAlerta ? `<div class="text-xs text-yellow-400 mt-2"><i class="fa-solid fa-bell mr-1"></i>${coincidencias.map(f => f.nome).join(', ')}</div>` : ''}
-                        </div>
-                        ${badge}
-                    </div>
-                    <button onclick="adicionarJogoParaAlertas('${j.id}')" class="mt-4 w-full py-2 bg-purple-600 hover:bg-purple-700 rounded-2xl text-sm">Adicionar a Alertas</button>
-                `;
-                container.appendChild(card);
-            });
-
-            renderAlertas(todos);
-        }
-
-        // ---- Construtor de condições ----
-        const CAMPOS_DISPONIVEIS = [
-            { valor: 'minuto', label: 'Minuto do jogo' },
-            { valor: 'totalGolos', label: 'Total de golos' },
-            { valor: 'golosCasa', label: 'Golos da casa' },
-            { valor: 'golosFora', label: 'Golos de fora' },
-            { valor: 'golosHT', label: 'Golos ao intervalo (só SokkerPro)' },
-            { valor: 'cantosTotal', label: 'Total de cantos' },
-            { valor: 'cantosCasa', label: 'Cantos casa' },
-            { valor: 'cantosFora', label: 'Cantos fora' },
-            { valor: 'posseCasa', label: 'Posse de bola casa %' },
-            { valor: 'posseFora', label: 'Posse de bola fora %' },
-            { valor: 'xcCasa', label: 'xC casa (só RoboBet)' },
-            { valor: 'xcFora', label: 'xC fora (só RoboBet)' },
-            { valor: 'appmTotal', label: 'Ataques perigosos/min total' },
-            { valor: 'superioridadeCasa', label: 'Superioridade/pressão casa %' },
-            { valor: 'superioridadeFora', label: 'Superioridade/pressão fora %' },
-            { valor: 'probOver25', label: 'Probabilidade Over 2.5 % (só SokkerPro)' },
-            { valor: 'probBTTS', label: 'Probabilidade Ambas Marcam % (só SokkerPro)' }
-        ];
-        const OPERADORES = [['>', 'maior que'], ['>=', 'maior ou igual a'], ['<', 'menor que'], ['<=', 'menor ou igual a'], ['==', 'igual a']];
-
-        function opcoesCampoHTML() {
-            return CAMPOS_DISPONIVEIS.map(c => `<option value="${c.valor}">${c.label}</option>`).join('');
-        }
-        function opcoesOperadorHTML() {
-            return OPERADORES.map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
-        }
-
-        function adicionarLinhaCondicao(preenchida) {
-            const lista = document.getElementById('condicoes-lista');
-            const linha = document.createElement('div');
-            linha.className = 'flex gap-x-2 items-center condicao-linha';
-            linha.innerHTML = `
-                <select class="cond-campo flex-1 bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-slate-100">${opcoesCampoHTML()}</select>
-                <select class="cond-operador bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-slate-100">${opcoesOperadorHTML()}</select>
-                <input class="cond-valor w-24 bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-slate-100" type="number" step="any" placeholder="valor">
-                <button onclick="this.closest('.condicao-linha').remove()" class="text-slate-500 hover:text-red-400 px-2"><i class="fa-solid fa-xmark"></i></button>
-            `;
-            lista.appendChild(linha);
-            if (preenchida) {
-                linha.querySelector('.cond-campo').value = preenchida.campo;
-                linha.querySelector('.cond-operador').value = preenchida.operador;
-                linha.querySelector('.cond-valor').value = preenchida.valor;
-            }
-        }
-
-        function criarNovoFiltro() {
-            const nome = document.getElementById('f-nome').value.trim();
-            const mercado = document.getElementById('f-mercado').value;
-            if (!nome) return alert('Dá um nome ao filtro.');
-
-            const condicoes = [];
-            document.querySelectorAll('#condicoes-lista .condicao-linha').forEach(linha => {
-                const campo = linha.querySelector('.cond-campo').value;
-                const operador = linha.querySelector('.cond-operador').value;
-                const valor = parseFloat(linha.querySelector('.cond-valor').value);
-                if (!isNaN(valor)) condicoes.push({ campo, operador, valor });
-            });
-
-            if (condicoes.length === 0) return alert('Adiciona pelo menos uma condição com um valor válido.');
-
-            filtros.push({ nome, mercado, condicoes });
-            guardarFiltros();
-            renderFiltros();
-            renderJogosAoVivo();
-            document.getElementById('f-nome').value = '';
-            document.getElementById('condicoes-lista').innerHTML = '';
-            switchTab('filtros');
-        }
-
-        // ---- Motor de comparação: mapeia um jogo para métricas planas ----
-        function calcularMetricas(j) {
-            const m = {
-                minuto: parseInt(j.minuto) || null,
-                golosCasa: (typeof j.golosCasa === 'number') ? j.golosCasa : parseFloat(j.golosCasa),
-                golosFora: (typeof j.golosFora === 'number') ? j.golosFora : parseFloat(j.golosFora)
-            };
-            m.totalGolos = (!isNaN(m.golosCasa) && !isNaN(m.golosFora)) ? m.golosCasa + m.golosFora : null;
-
-            if (j.stats) {
-                if (j.stats.corners) {
-                    m.cantosCasa = j.stats.corners.home;
-                    m.cantosFora = j.stats.corners.away;
-                    m.cantosTotal = j.stats.corners.total;
-                }
-                if (j.stats.possession) {
-                    m.posseCasa = j.stats.possession.home;
-                    m.posseFora = j.stats.possession.away;
-                }
-                if (j.stats.xc) {
-                    m.xcCasa = j.stats.xc.home;
-                    m.xcFora = j.stats.xc.away;
-                }
-                if (j.stats.appm_total) m.appmTotal = j.stats.appm_total.total;
-            }
-            if (j.superiority) {
-                m.superioridadeCasa = j.superiority.home;
-                m.superioridadeFora = j.superiority.away;
-            }
-            if (j.golosHT !== undefined && j.golosHT !== null) m.golosHT = j.golosHT;
-            if (j.probOver25 !== undefined && j.probOver25 !== null) m.probOver25 = j.probOver25;
-            if (j.probBTTS !== undefined && j.probBTTS !== null) m.probBTTS = j.probBTTS;
-            return m;
-        }
-
-        function condicaoCumprida(valorReal, operador, valorFiltro) {
-            if (valorReal === undefined || valorReal === null || isNaN(valorReal)) return false;
-            switch (operador) {
-                case '>': return valorReal > valorFiltro;
-                case '>=': return valorReal >= valorFiltro;
-                case '<': return valorReal < valorFiltro;
-                case '<=': return valorReal <= valorFiltro;
-                case '==': return valorReal === valorFiltro;
-                default: return false;
-            }
-        }
-
-        function filtrosQueCoincidem(jogo) {
-            const metricas = calcularMetricas(jogo);
-            return filtros.filter(f =>
-                (f.condicoes || []).length > 0 &&
-                f.condicoes.every(c => condicaoCumprida(metricas[c.campo], c.operador, c.valor))
-            );
-        }
-
-        function renderAlertas(todosJogos) {
-            const container = document.getElementById('alertas-lista');
-            if (!container) return;
-            container.innerHTML = '';
-            let algum = false;
-
-            todosJogos.forEach(j => {
-                const coincidencias = filtrosQueCoincidem(j);
-                if (coincidencias.length === 0) return;
-                algum = true;
-                const card = document.createElement('div');
-                card.className = 'bg-slate-900 border border-yellow-500/50 rounded-2xl p-4';
-                card.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <div class="font-semibold">${j.casa} vs ${j.fora} <span class="text-xs text-slate-500">(${nomeFonteExibicao(j.fonte)})</span></div>
-                            <div class="text-xs text-slate-400">${j.golosCasa}-${j.golosFora} · ${j.minuto}</div>
-                        </div>
-                        <div class="text-xs text-yellow-400 text-right">${coincidencias.map(f => f.nome).join(', ')}</div>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-
-            if (!algum) {
-                container.innerHTML = '<div class="text-slate-500 text-sm">Sem alertas ativos neste momento.</div>';
-            }
-        }
-
-        function showConfigModal() {
-            const key = localStorage.getItem('livescore_key') || '';
-            const modal = document.createElement('div');
-            modal.id = 'config-modal';
-            modal.className = 'fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4';
-            modal.innerHTML = `
-                <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-md w-full">
-                    <h3 class="text-lg font-semibold mb-2">Configuração</h3>
-                    <p class="text-slate-400 text-sm mb-4">Cola aqui a tua X-RapidAPI-Key, depois de subscreveres o plano grátis da LiveScore em <a href="https://rapidapi.com/apidojo/api/livescore6" target="_blank" class="text-emerald-400 underline">rapidapi.com/apidojo/api/livescore6</a>. Fica guardada só neste browser.</p>
-                    <input id="config-api-key" type="text" value="${key}" placeholder="X-RapidAPI-Key"
-                        class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-3 text-sm font-mono mb-4">
-                    <div class="flex gap-x-2">
-                        <button onclick="guardarConfig()" class="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 rounded-3xl font-semibold text-sm">Guardar</button>
-                        <button onclick="fecharConfigModal()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-3xl text-sm">Cancelar</button>
-                    </div>
-                </div>`;
-            document.body.appendChild(modal);
-        }
-
-        function fecharConfigModal() {
-            const modal = document.getElementById('config-modal');
-            if (modal) modal.remove();
-        }
-
-        function guardarConfig() {
-            const key = document.getElementById('config-api-key').value.trim();
-            localStorage.setItem('livescore_key', key);
-            fecharConfigModal();
-            atualizarJogosAoVivo();
-        }
-
-        function adicionarJogoParaAlertas(id) {
-            alert('Jogo adicionado para alertas!');
-        }
-
-        function switchTab(tab) {
-            document.querySelectorAll('[id^="content-"]').forEach(el => el.classList.add('hidden'));
-            document.getElementById('content-' + tab).classList.remove('hidden');
-            if (tab === 'filtros') renderFiltros();
-            if (tab === 'jogos') renderJogosAoVivo(); // não chama a API sozinho - só mostra o que já estava carregado
-            if (tab === 'alertas') renderAlertas([...jogosLiveScore, ...jogosRoboBet]);
-            if (tab === 'criar' && document.querySelectorAll('#condicoes-lista .condicao-linha').length === 0) {
-                adicionarLinhaCondicao();
-            }
-        }
-
-        window.onload = init;
-    </script>
+    <!-- JOGOS AO VIVO -->
+    <div id="content-jogos" class="hidden">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="font-display text-xl font-semibold">Jogos ao Vivo</h2>
+          <p class="text-chalk-500 text-sm">Todos os jogos encontrados · destaque automático</p>
+        </div>
+        <button onclick="atualizarJogosAoVivo(true)" class="key-btn px-4 py-2 bg-pitch-700 hover:bg-pitch-600 border border-pitch-600 rounded-lg text-xs uppercase font-semibold transition-colors">
+          <i class="fa-solid fa-arrows-rotate mr-2"></i> Atualizar
+        </button>
+      </div>
+      <div id="jogos-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </div>
+
+    <!-- ALERTAS -->
+    <div id="content-alertas" class="hidden">
+      <div class="max-w-3xl border border-dashed border-pitch-600 rounded-xl p-10 text-center">
+        <i class="fa-solid fa-bell text-2xl text-chalk-500 mb-3"></i>
+        <h2 class="font-display text-lg font-semibold mb-1">Alertas</h2>
+        <p class="text-chalk-500 text-sm">Exporte um filtro em "Meus Filtros" para gerar o JSON de alerta e ligar ao Activepieces.</p>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+  let filtros = [];
+  let jogosAoVivo = [];
+
+  function init() {
+    carregarFiltros();
+    renderFiltros();
+    switchTab('filtros');
+  }
+
+  function carregarFiltros() {
+    const saved = localStorage.getItem('agregador_filtros');
+    if (saved) filtros = JSON.parse(saved);
+  }
+
+  function guardarFiltros() {
+    localStorage.setItem('agregador_filtros', JSON.stringify(filtros));
+  }
+
+  function renderFiltros() {
+    const container = document.getElementById('filtros-lista');
+    const empty = document.getElementById('filtros-empty');
+    container.innerHTML = '';
+
+    if (filtros.length === 0) {
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+
+    filtros.forEach((f, i) => {
+      const card = document.createElement('div');
+      card.className = 'filter-card bg-pitch-800 border border-pitch-600 rounded-xl p-5';
+      card.innerHTML = `
+        <div class="flex justify-between items-start">
+          <div>
+            <div class="font-semibold text-sm">${f.nome}</div>
+            <div class="font-mono text-[11px] text-chalk-500 uppercase mt-0.5">${f.mercado || ''}</div>
+          </div>
+          <button onclick="eliminarFiltro(${i})" class="text-chalk-500 hover:text-signal transition-colors"><i class="fa-solid fa-trash"></i></button>
+        </div>
+        <div class="mt-4 grid grid-cols-3 gap-2">
+          <button onclick="exportarParaRobobet(${i})" class="key-btn text-[11px] py-2 bg-pitch-700 hover:bg-pitch-600 border border-pitch-600 rounded-md uppercase">RoboBet</button>
+          <button onclick="exportarParaAlertas(${i})" class="key-btn text-[11px] py-2 bg-turf hover:bg-turf-700 text-white rounded-md uppercase">Alertas</button>
+          <button onclick="exportarComoJSON(${i})" class="key-btn text-[11px] py-2 bg-pitch-700 hover:bg-pitch-600 border border-pitch-600 rounded-md uppercase">JSON</button>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function eliminarFiltro(i) {
+    if (confirm('Eliminar?')) {
+      filtros.splice(i, 1);
+      guardarFiltros();
+      renderFiltros();
+    }
+  }
+
+  function exportarParaAlertas(i) {
+    const f = filtros[i];
+    const data = { nome: f.nome, tipo: f.tipo, mercado: f.mercado, condicoes: f.condicoes || [] };
+    navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => alert('JSON copiado para alertas!'));
+  }
+
+  function exportarParaRobobet(i) {
+    alert('Copiado para RoboBet (formato básico)');
+  }
+
+  function exportarComoJSON(i) {
+    navigator.clipboard.writeText(JSON.stringify(filtros[i], null, 2)).then(() => alert('JSON copiado!'));
+  }
+
+  async function atualizarJogosAoVivo() {
+    const container = document.getElementById('jogos-container');
+    container.innerHTML = '<div class="col-span-full text-center py-8 text-chalk-500 text-sm font-mono">A carregar jogos ao vivo...</div>';
+
+    // Dados de demonstração — trocar por chamada real quando a fonte de dados estiver ligada.
+    jogosAoVivo = [
+      { id: 1, casa: 'Benfica', fora: 'Porto', placar: '1-0', minuto: "67'", competicao: 'Liga Portugal', fonte: 'demo' },
+      { id: 2, casa: 'Real Madrid', fora: 'Barcelona', placar: '2-1', minuto: "45'", competicao: 'La Liga', fonte: 'demo' },
+    ];
+
+    renderJogosAoVivo();
+    renderTicker();
+  }
+
+  function renderJogosAoVivo() {
+    const container = document.getElementById('jogos-container');
+    container.innerHTML = '';
+    jogosAoVivo.forEach(j => {
+      const card = document.createElement('div');
+      card.className = 'game-card bg-pitch-800 border border-pitch-600 rounded-xl p-5';
+      card.innerHTML = `
+        <div class="flex justify-between items-start">
+          <div>
+            <div class="font-semibold text-sm">${j.casa} <span class="text-chalk-500 font-normal">vs</span> ${j.fora}</div>
+            <div class="text-[11px] text-chalk-500 uppercase mt-0.5">${j.competicao}</div>
+          </div>
+          <span class="live-dot mt-1.5"></span>
+        </div>
+        <div class="mt-3 flex items-baseline gap-x-2">
+          <span class="font-mono text-2xl font-bold text-gold">${j.placar}</span>
+          <span class="font-mono text-xs text-chalk-500">${j.minuto}</span>
+        </div>
+        <button onclick="adicionarJogoParaAlertas(${j.id})" class="key-btn mt-4 w-full py-2 bg-turf hover:bg-turf-700 text-white rounded-md text-[11px] uppercase">Adicionar a alertas</button>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function renderTicker() {
+    const track = document.getElementById('ticker-track');
+    if (!jogosAoVivo.length) { track.innerHTML = ''; return; }
+
+    const item = j => `
+      <span class="flex items-center gap-x-2 px-4 whitespace-nowrap border-r border-pitch-600">
+        <span>${j.casa}</span>
+        <span class="text-gold font-bold">${j.placar}</span>
+        <span>${j.fora}</span>
+        <span class="text-chalk-500">${j.minuto}</span>
+      </span>`;
+
+    // duplica a lista para permitir loop contínuo sem salto visual
+    const html = jogosAoVivo.map(item).join('') + jogosAoVivo.map(item).join('');
+    track.innerHTML = html;
+  }
+
+  function adicionarJogoParaAlertas(id) {
+    alert('Jogo adicionado para alertas!');
+  }
+
+  function abrirModalFiltroComposto() {
+    alert('Modal de filtro composto (a implementar).');
+  }
+
+  function importarFiltro() {
+    const text = document.getElementById('import-text').value.trim();
+    if (!text) return;
+    try {
+      const data = JSON.parse(text);
+      filtros.push(data);
+      guardarFiltros();
+      switchTab('filtros');
+    } catch (e) {
+      alert('JSON inválido.');
+    }
+  }
+
+  function showConfigModal() {
+    alert('Configurações (a implementar).');
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('[id^="content-"]').forEach(el => el.classList.add('hidden'));
+    document.getElementById('content-' + tab).classList.remove('hidden');
+
+    document.querySelectorAll('.nav-tab').forEach(el => {
+      el.classList.remove('tab-active');
+      el.classList.add('text-chalk-400');
+    });
+    const activeTab = document.getElementById('tab-' + tab);
+    activeTab.classList.add('tab-active');
+    activeTab.classList.remove('text-chalk-400');
+
+    if (tab === 'filtros') renderFiltros();
+    if (tab === 'jogos') atualizarJogosAoVivo();
+  }
+
+  window.onload = () => {
+    init();
+    atualizarJogosAoVivo(); // popula o ticker mesmo antes de abrir a tab "Jogos ao Vivo"
+  };
+</script>
 </body>
 </html>
